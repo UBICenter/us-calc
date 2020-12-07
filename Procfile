@@ -1,1 +1,1 @@
-web: gunicorn dash/us-ubi-calculator:server
+web: gunicorn dash/funding:server
