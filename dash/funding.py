@@ -116,6 +116,8 @@ card_graph = dbc.Card(
 app = dash.Dash(__name__,
                 external_stylesheets=[dbc.themes.FLATLY])
 
+server = app.server
+
 app.layout = html.Div([
         # Row 1 - header
         html.Br(),
