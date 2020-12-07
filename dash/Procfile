@@ -1,1 +1,0 @@
-web: gunicorn us-ubi-calculator:server
