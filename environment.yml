@@ -1,6 +1,7 @@
-name: reponame
+name: calc
 dependencies:
 - python
+- dash
 - plotly
 - pandas
 - numpy
