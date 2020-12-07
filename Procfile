@@ -1,1 +1,1 @@
-web: gunicorn dash/funding:server
+web: gunicorn funding:server
