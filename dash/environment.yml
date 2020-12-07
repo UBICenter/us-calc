@@ -1,0 +1,11 @@
+name: calc
+dependencies:
+- python
+- dash
+- plotly
+- pandas
+- numpy
+- pip
+- pip:
+  - jupyter-book
+  - "git+https://github.com/PSLmodels/microdf.git"
