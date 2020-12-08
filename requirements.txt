@@ -1,1 +1,7 @@
 gunicorn
+python
+dash
+plotly
+pandas
+numpy
+git+git://github.com/PSLmodels/microdf.git#egg=microdf
