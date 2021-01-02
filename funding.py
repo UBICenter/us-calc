@@ -9,16 +9,52 @@ from dash.dependencies import Input, Output
 import dash_bootstrap_components as dbc
 import microdf as mdf
 
-person = pd.read_csv('https://github.com/ngpsu22/Funding/raw/main/person_ubi_funding.csv')
 
 BLUE = '#1976D2'
 
+person = pd.read_csv('https://raw.githubusercontent.com/ngpsu22/Funding/main/person_ubi_funding%20(7).csv')
+
+# Calculate orginal poverty
 population = person.asecwt.sum()
+original_total_poor = (person.original_poor * person.asecwt).sum()
+original_poverty_rate = (original_total_poor / population) * 100
 
-og_total_poor = (person.original_poor * person.asecwt).sum()
-original_poverty_rate = (og_total_poor / population) * 100
+spmu = person.drop_duplicates(subset=['spmfamunit'])
+spmu['original_poverty_gap'] = person.spmthresh - person.spmtotres
+original_poverty_gap = (((spmu.original_poor * spmu.original_poverty_gap *
+                         spmu.asecwth).sum()))
 
-person['spm_resources_per_person'] = person.spmtotres / person.pernum
+# Calculate original child poverty
+child_population = (person.child * person.asecwt).sum()
+original_child_poor = (person.child * person.original_poor * person.asecwt).sum()
+original_child_poverty_rate = (original_child_poor / child_population) * 100
+
+# Calculate original adult poverty
+adult_population = (person.adult * person.asecwt).sum()
+original_adult_poor = (person.adult * person.original_poor * person.asecwt).sum()
+original_adult_poverty_rate = (original_adult_poor / adult_population) * 100
+
+# Calculate original pwb poverty
+pwb_population = (person.pwb * person.asecwt).sum()
+original_pwb_poor = (person.pwb * person.original_poor * person.asecwt).sum()
+original_pwb_poverty_rate = (original_pwb_poor / pwb_population) * 100
+
+# Calculate original White poverty
+white_population = (person.white_non_hispanic * person.asecwt).sum()
+original_white_poor = (person.white_non_hispanic * person.original_poor * person.asecwt).sum()
+original_white_poverty_rate = (original_white_poor / white_population) * 100
+
+# Calculate original Black poverty
+black_population = (person.black * person.asecwt).sum()
+original_black_poor = (person.black * person.original_poor * person.asecwt).sum()
+original_black_poverty_rate = (original_black_poor / black_population) * 100
+
+# Calculate original Hispanic poverty
+hispanic_population = (person.hispanic * person.asecwt).sum()
+original_hispanic_poor = (person.hispanic * person.original_poor * person.asecwt).sum()
+original_hispanic_poverty_rate = (original_hispanic_poor / hispanic_population) * 100
+
+# Caluclate original gini
 gini = (mdf.gini(person, 'spm_resources_per_person' , 'asecwt'))
 
 card_main = dbc.Card(
@@ -35,12 +71,11 @@ card_main = dbc.Card(
                                                             'fontSize':20}),
                 dcc.Checklist(id='my-checklist',
                                 options=[
-                                    {'label': '  Social Security', 'value': 'ss'},
-                                    {'label': '  Supplemental Security Income (SSI)', 'value': 'ssi'},
-                                    {'label': '  Unemployment', 'value': 'unemp'},
-                                    {'label': '  Earned Income Tax Credit', 'value': 'eitc'},
                                     {'label': '  Child Tax Credit', 'value': 'ctc'},
+                                    {'label': '  Supplemental Security Income (SSI)', 'value': 'ssi'},
                                     {'label': '  Snap (food stamps)', 'value': 'snap'},
+                                    {'label': '  Earned Income Tax Credit', 'value': 'eitc'},
+                                    {'label': '  Unemployment', 'value': 'unemp'},
                                     {'label': '  Energy Subsidy (LIHEAP)', 'value': 'energy'}
                                     
                                 ],
@@ -48,59 +83,46 @@ card_main = dbc.Card(
                               labelStyle={'display': 'block'}
                             ),
                 html.Br(),
-                html.Label(['Flat Tax on AGI'],style={'font-weight': 'bold',
+                html.Label(['Repeal current taxes:'],style={'font-weight': 'bold',
                                                             "text-align": "center",
                                                              "color":"white",
                                                             'fontSize':20}),
+                
+                html.Br(),
+                dcc.Checklist(id='my-checklist2',
+                                options=[
+                                    {'label': 'Income taxes', 'value': 'income_taxes'},
+                                    {'label': 'Employee side payroll', 'value': 'fica'},
+                                ],
+                                value=[],
+                              labelStyle={'display': 'block'}
+                            ),
+                
+                 html.Br(),
+                
+                html.Label(['Add flat tax on AGI:'],style={'font-weight': 'bold',
+                                                            "text-align": "center",
+                                                             "color":"white",
+                                                            'fontSize':20}),
+                
                 dcc.Slider(
                             id='agi-slider',
                             min=0,
-                            max=10,
+                            max=50,
                             step=1,
                             value=0,
+                            tooltip = { 'always_visible': True, 'placement': 'bottom'},
                             marks={0: {'label': '0%', 'style': {'color': '#F8F8FF'}},
-                                   1: {'label': '1%', 'style': {'color': '#F8F8FF'}},
-                                   2: {'label': '2%', 'style': {'color': '#F8F8FF'}},
-                                   3: {'label': '3%', 'style': {'color': '#F8F8FF'}},
-                                   4: {'label': '4%', 'style': {'color': '#F8F8FF'}},
-                                   5: {'label': '5%', 'style': {'color': '#F8F8FF'}},
-                                   6: {'label': '6%', 'style': {'color': '#F8F8FF'}},
-                                   7: {'label': '7%', 'style': {'color': '#F8F8FF'}},
-                                   8: {'label': '8%', 'style': {'color': '#F8F8FF'}},
-                                   9: {'label': '9%', 'style': {'color': '#F8F8FF'}},
                                    10: {'label': '10%', 'style': {'color': '#F8F8FF'}},
+                                   20: {'label': '20%', 'style': {'color': '#F8F8FF'}},
+                                   30: {'label': '30%', 'style': {'color': '#F8F8FF'}},
+                                   40: {'label': '40%', 'style': {'color': '#F8F8FF'}},
+                                   50: {'label': '50%', 'style': {'color': '#F8F8FF'}},
                                       }
                         ),
                         html.Div(id='slider-output-container'),
                 
                                 html.Br(),
-                html.Label(['Flat Tax on Taxable Income'],style={'font-weight': 'bold',
-                                                            "text-align": "center",
-                                                             "color":"white",
-                                                            'fontSize':20}),
-                
-                dcc.Slider(
-                            id='taxable-slider',
-                            min=0,
-                            max=10,
-                            step=1,
-                            value=0,
-                            marks={0: {'label': '0%', 'style': {'color': '#F8F8FF'}},
-                                   1: {'label': '1%', 'style': {'color': '#F8F8FF'}},
-                                   2: {'label': '2%', 'style': {'color': '#F8F8FF'}},
-                                   3: {'label': '3%', 'style': {'color': '#F8F8FF'}},
-                                   4: {'label': '4%', 'style': {'color': '#F8F8FF'}},
-                                   5: {'label': '5%', 'style': {'color': '#F8F8FF'}},
-                                   6: {'label': '6%', 'style': {'color': '#F8F8FF'}},
-                                   7: {'label': '7%', 'style': {'color': '#F8F8FF'}},
-                                   8: {'label': '8%', 'style': {'color': '#F8F8FF'}},
-                                   9: {'label': '9%', 'style': {'color': '#F8F8FF'}},
-                                   10: {'label': '10%', 'style': {'color': '#F8F8FF'}},
-                                      }
-                        ),
-                        html.Div(id='slider-output-container2'),
-                
-                
             ]
         ),
     ],
@@ -113,6 +135,12 @@ card_graph = dbc.Card(
               figure={}), body=True, color="info",
 )
 
+card_graph2 = dbc.Card(
+        dcc.Graph(id='my-graph2',
+              figure={}), body=True, color="info",
+)
+
+
 app = dash.Dash(__name__,
                 external_stylesheets=[dbc.themes.FLATLY])
 
@@ -120,6 +148,11 @@ server = app.server
 
 app.layout = html.Div([
         # Row 1 - header
+        dbc.Row(
+            [
+        dbc.Col(html.A([
+        html.Img(src="https://blog.ubicenter.org/_static/ubi_center_logo_wide_blue.png", style={'height':'60%', 'width':'60%'})
+        ], href='https://www.ubicenter.org/'),width=2)]),
         html.Br(),
         dbc.Row(
             [
@@ -142,19 +175,27 @@ app.layout = html.Div([
         dbc.Row([
             dbc.Col(card_main, width=3),
              dbc.Col(card_graph, width=6.8)],justify="around"),
+        html.Br(),
+        html.Br(),
+        dbc.Row(
+            dbc.Col(card_graph2, width={'size': 6, 'offset': 5}), justify="around"),
+    html.Br(),
+    html.Br(),
+    html.Br(),
+    html.Br(),
 ])
 
 @app.callback(
     Output(component_id='my-graph', component_property='figure'),
+    Output(component_id='my-graph2', component_property='figure'),
     Input(component_id='agi-slider', component_property='value'),
-    Input(component_id='taxable-slider', component_property='value'),
-    Input(component_id='my-checklist', component_property='value')
+    Input(component_id='my-checklist', component_property='value'),
+    Input(component_id='my-checklist2', component_property='value')
 )
-def ubi(agi_tax, taxable_tax, benefits):
-    
+def ubi(agi_tax, benefits, taxes): 
     target_persons = person.copy(deep=True) 
     
-    # Calculate the new taxes each person pays
+    # Calculate the new taxes from tax on AGI
     tax_rate = agi_tax / 100
     target_persons['new_taxes'] = target_persons.adjginc * tax_rate
     
@@ -163,126 +204,174 @@ def ubi(agi_tax, taxable_tax, benefits):
     spmu.columns = ['total_tax_increase']
     target_persons = target_persons.merge(spmu,left_on=['spmfamunit'],
                                            right_index=True)
-
     
-    # Calculate the new taxes each person pays
-    tax_rate2 = taxable_tax / 100
-    target_persons['new_taxes2'] = target_persons.taxinc * tax_rate2
+    # Calculate funding from taxes
+    funding = (target_persons.new_taxes * target_persons.asecwt).sum()
     
-    # Calculate the total tax increase of an SPM unit
-    spmu2 = target_persons.groupby(['spmfamunit'])[['new_taxes2']].sum()
-    spmu2.columns = ['total_tax_increase2']
-    target_persons = target_persons.merge(spmu2,left_on=['spmfamunit'],
-                                           right_index=True)
+    #Calculate SPM unit new resources after taxes
+    target_persons['new_spm_resources'] = target_persons.spmtotres - target_persons.total_tax_increase
     
-    # Calculate tax revenue
-    tax_revenue = ((target_persons.new_taxes * target_persons.asecwt).sum() + 
-                  (target_persons.new_taxes2 * target_persons.asecwt).sum())
-    
-    if 'ss' in benefits:
-        ubi_ss = (target_persons.incss * target_persons.asecwt).sum()
-        target_persons['new_ssspm'] = 0
-    else: 
-        ubi_ss = 0
-        target_persons['new_ssspm'] = target_persons.spmss
-        
     if 'ssi' in benefits:
-        ubi_ssi = (target_persons.incssi * target_persons.asecwt).sum()
-        target_persons['new_ssispm'] = 0 
-    else:
-        ubi_ssi = 0
-        target_persons['new_ssispm'] = target_persons.spmssi
+        funding += (target_persons.incssi * target_persons.asecwt).sum()
+        target_persons.new_spm_resources -= target_persons.incssi
     
     if 'unemp' in benefits:
-        ubi_unemp = (target_persons.incunemp * target_persons.asecwt).sum()
-        target_persons['new_spmincunemp'] = 0 
-    else:
-        ubi_unemp = 0
-        target_persons['new_spmincunemp'] = target_persons.spmincunemp
+        funding += (target_persons.incunemp * target_persons.asecwt).sum()
+        target_persons.new_spm_resources -= target_persons.incunemp
         
     if 'eitc' in benefits:
-        ubi_eitc = (target_persons.eitcred * target_persons.asecwt).sum()
-        target_persons['new_spmeitc'] = 0
-    else:
-        ubi_eitc = 0
-        target_persons['new_spmeitc'] = target_persons.spmeitc
+        funding += (target_persons.eitcred * target_persons.asecwt).sum()
+        target_persons.new_spm_resources -= target_persons.spmeitc
         
     if 'ctc' in benefits:
-        ubi_ctc = (target_persons.ctc * target_persons.asecwt).sum()
-        target_persons['new_spmctc'] = 0
-    else:
-        ubi_ctc = 0
-        target_persons['new_spmctc'] = target_persons.spmctc
+        funding += (target_persons.ctc * target_persons.asecwt).sum()
+        target_persons.new_spm_resources -= target_persons.spmctc
         
     if 'snap' in benefits:
-        ubi_snap = (target_persons.snap_pp * target_persons.asecwt).sum()
-        target_persons['new_spmsnap'] = 0
-    else:
-        ubi_snap = 0
-        target_persons['new_spmsnap'] = target_persons.spmsnap
-    
+        funding += (target_persons.snap_pp * target_persons.asecwt).sum()
+        target_persons.new_spm_resources -= target_persons.snap_pp
+        
     if 'energy' in benefits:
-        ubi_energy = (target_persons.energy_pp * target_persons.asecwt).sum()
-        target_persons['new_spmenergy'] = 0
-    else:
-        ubi_energy = 0
-        target_persons['new_spmenergy'] = target_persons.spmheat
+        funding += (target_persons.energy_pp * target_persons.asecwt).sum()
+        target_persons.new_spm_resources -= target_persons.energy_pp
+    
+    if 'income_taxes' in taxes:
+        funding -= (target_persons.fedtaxac * target_persons.asecwt).sum()
+        target_persons.new_spm_resources += target_persons.fedtaxac
+    
+    if 'fica' in taxes:
+        funding -= (target_persons.fica * target_persons.asecwt).sum()
+        target_persons.new_spm_resources += target_persons.fica
+    
+    if ('income_taxes' in taxes) & ('ctc' in benefits):
+        funding -= (target_persons.ctc * target_persons.asecwt).sum()
+        target_persons.new_spm_resources += target_persons.spmctc
+    
+    if ('income_taxes' in taxes) & ('eitc' in benefits):
+        funding -= (target_persons.eitcred * target_persons.asecwt).sum()
+        target_persons.new_spm_resources += target_persons.spmeitc
+    
 
-    funding = (ubi_ss + ubi_ssi + ubi_unemp + ubi_eitc + ubi_ctc + 
-               ubi_snap + ubi_energy + tax_revenue)
     ubi = funding / population
-    target_persons['total_ubi'] = ubi * target_persons.pernum
-
-    # Calculate new total resources
-    target_persons['new_spm_resources'] = (target_persons.spmtotres + 
-                                           target_persons.new_ssspm -
-                                           target_persons.spmss + 
-                                           target_persons.new_ssispm -
-                                           target_persons.spmssi +
-                                           target_persons.new_spmincunemp -
-                                           target_persons.spmincunemp +
-                                           target_persons.new_spmeitc -
-                                           target_persons.spmeitc +
-                                           target_persons.new_spmctc -
-                                           target_persons.spmctc +
-                                           target_persons.new_spmsnap -
-                                           target_persons.spmsnap +
-                                           target_persons.new_spmenergy -
-                                           target_persons.spmheat +
-                                           target_persons.total_ubi -
-                                           target_persons.total_tax_increase +
-                                            target_persons.total_tax_increase2)
+    target_persons['total_ubi'] = ubi * target_persons.numper
+    target_persons.new_spm_resources += target_persons.total_ubi
   
     target_persons['new_resources_per_person'] = (target_persons.new_spm_resources /
-                                                  target_persons.pernum)
+                                                  target_persons.numper)
     
     # Calculate the change in poverty rate
     target_persons['poor'] = (target_persons.new_spm_resources < 
                               target_persons.spmthresh)
-  
     total_poor = (target_persons.poor * target_persons.asecwt).sum()
     poverty_rate = (total_poor / population) * 100
-
-    poverty_change = ((poverty_rate - original_poverty_rate) / 
+    poverty_rate_change = ((poverty_rate - original_poverty_rate) / 
                       original_poverty_rate * 100).round(2)
+    
+    # Calculate the change in child poverty
+    total_child_poor = (target_persons.child * target_persons.poor * target_persons.asecwt).sum()
+    child_poverty_rate = (total_child_poor / child_population) * 100
+    child_poverty_rate_change = ((child_poverty_rate - original_child_poverty_rate)/
+                                original_child_poverty_rate * 100).round(2)
+    
+    # Calculate the change in poverty gap
+    target_persons['poverty_gap'] = target_persons.spmthresh - target_persons.new_spm_resources
+    spmu = target_persons.drop_duplicates(subset=['spmfamunit'])
+    poverty_gap = (((spmu.poor * spmu.poverty_gap
+                             * spmu.asecwth).sum()))
+    poverty_gap_change = ((poverty_gap - original_poverty_gap) /
+                        original_poverty_gap * 100).round(1)
 
     # Calculate change in Gini
     new_gini = (mdf.gini(target_persons, 'new_resources_per_person' , 'asecwt'))
     gini_change = ((new_gini - gini) / gini * 100).round(2)
     
+    # Calculate percent winners
+    target_persons['winner'] = (target_persons.new_spm_resources > 
+                                target_persons.spmtotres)
+    total_winners = (target_persons.winner * target_persons.asecwt).sum()
+    percent_winners = (total_winners / population * 100).round(1)
+    
+    # Calculate adult poverty
+    total_adult_poor = (target_persons.adult * target_persons.poor * target_persons.asecwt).sum()
+    adult_poverty_rate = (total_adult_poor / adult_population) * 100
+    adult_poverty_rate_change = ((adult_poverty_rate - original_adult_poverty_rate)/
+                                original_adult_poverty_rate * 100).round(2)
+    
+    # Calculate pwb poverty
+    total_pwb_poor = (target_persons.pwb * target_persons.poor * target_persons.asecwt).sum()
+    pwb_poverty_rate = (total_pwb_poor / pwb_population) * 100
+    pwb_poverty_rate_change = ((pwb_poverty_rate - original_pwb_poverty_rate)/
+                                original_pwb_poverty_rate * 100).round(2)
+    
+    # Calculate White poverty
+    total_white_poor = (target_persons.white_non_hispanic * target_persons.poor * target_persons.asecwt).sum()
+    white_poverty_rate = (total_white_poor / white_population) * 100
+    white_poverty_rate_change = ((white_poverty_rate - original_white_poverty_rate)/
+                                original_white_poverty_rate * 100).round(2)
+    
+    # Calculate Black poverty
+    total_black_poor = (target_persons.black * target_persons.poor * target_persons.asecwt).sum()
+    black_poverty_rate = (total_black_poor / black_population) * 100
+    black_poverty_rate_change = ((black_poverty_rate - original_black_poverty_rate)/
+                                original_black_poverty_rate * 100).round(2)
+    
+    # Calculate Hispanic poverty
+    total_hispanic_poor = (target_persons.hispanic * target_persons.poor * target_persons.asecwt).sum()
+    hispanic_poverty_rate = (total_hispanic_poor / hispanic_population) * 100
+    hispanic_poverty_rate_change = ((hispanic_poverty_rate - original_hispanic_poverty_rate)/
+                                original_hispanic_poverty_rate * 100).round(2)
+    
     ubi_int = int(ubi)
     ubi_int = "{:,}".format(ubi_int)
     ubi_string = str(ubi_int)
+    winners_string = str(percent_winners)
     
-    x=['Poverty Change', 'Inequality Change']
+    x2=['Child', 'Adult', 'People<br>with<br>disabilities', 'White<br>non<br>Hispanic', 'Black', 'Hispanic']
 
-    fig = go.Figure([go.Bar(x=x, y=[poverty_change, gini_change],
-                            text=[poverty_change, gini_change],
+    fig2 = go.Figure([go.Bar(x=x2, y=[child_poverty_rate_change,
+                                     adult_poverty_rate_change,
+                                     pwb_poverty_rate_change,
+                                     white_poverty_rate_change,
+                                     black_poverty_rate_change,
+                                     hispanic_poverty_rate_change],
+                            text=[child_poverty_rate_change,
+                                     adult_poverty_rate_change,
+                                     pwb_poverty_rate_change,
+                                     white_poverty_rate_change,
+                                     black_poverty_rate_change,
+                                     hispanic_poverty_rate_change],
+                           marker_color=BLUE)])
+    
+    fig2.update_layout(uniformtext_minsize=10, uniformtext_mode='hide', plot_bgcolor='white')
+    fig2.update_traces(texttemplate='%{text}%', textposition='auto')
+    fig2.update_layout(title_text='Poverty rate breakdown')
+
+    fig2.update_xaxes(
+        tickangle = 0,
+        title_text = "",
+        tickfont = {"size": 14},
+        title_standoff = 25)
+
+    fig2.update_yaxes(
+        title_text = "Percent change",
+        ticksuffix ="%",
+        tickprefix = "",
+        tickfont = {'size':14},
+        title_standoff = 25)
+
+    fig2.update_xaxes(title_font=dict(size=14, family='Roboto', color='black'))
+    fig2.update_yaxes(title_font=dict(size=14, family='Roboto', color='black'))
+    
+    x=['Poverty Rate', 'Poverty Gap', 'Inequality (Gini)']
+
+    fig = go.Figure([go.Bar(x=x, y=[child_poverty_rate_change, poverty_rate_change, poverty_gap_change, gini_change],
+                            text=[child_poverty_rate_change, poverty_rate_change, poverty_gap_change, gini_change],
                            marker_color=BLUE)])
     
     fig.update_layout(uniformtext_minsize=10, uniformtext_mode='hide', plot_bgcolor='white')
     fig.update_traces(texttemplate='%{text}%', textposition='auto')
-    fig.update_layout(title_text='Your changes would fund an annual UBI of $'+ ubi_string + ' per person')
+    fig.update_layout(title_text='Your changes would fund an annual UBI of $'+ ubi_string + ' per person.<br>' + 
+                     winners_string + '% of people would be better off under this plan.')
 
     fig.update_xaxes(
         tickangle = 0,
@@ -299,8 +388,9 @@ def ubi(agi_tax, taxable_tax, benefits):
 
     fig.update_xaxes(title_font=dict(size=14, family='Roboto', color='black'))
     fig.update_yaxes(title_font=dict(size=14, family='Roboto', color='black'))
+    
+    return fig, fig2
 
-    return fig
 
 if __name__ == '__main__':
     app.run_server(debug=True, port=8000, host='127.0.0.1')
