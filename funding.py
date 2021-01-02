@@ -9,54 +9,92 @@ from dash.dependencies import Input, Output
 import dash_bootstrap_components as dbc
 import microdf as mdf
 
+# Import data from Ipums
+person_raw = pd.read_csv('https://github.com/UBICenter/us-calc/raw/main/cps_00035.csv.gz')
 
-BLUE = '#1976D2'
+# Create copy and lower column names
+person = person_raw.copy(deep=True)
+person.columns = person.columns.str.lower()
 
-person = pd.read_csv('https://github.com/UBICenter/us-calc/raw/main/person_us_calc.csv')
+# Crate booleans for demographics
+person['adult'] = person.age > 17
+person['child'] = person.age < 18
 
-# Calculate orginal poverty
+person['black'] = person.race == 200
+person['white_non_hispanic'] = ((person.race == 100) & (person.hispan == 000))
+person['hispanic'] = ((person.hispan > 1) & person.hispan < 700)
+person['pwd'] = person.diffany == 2
+person['non_citizen'] = person.citizen == 5
+
+# Remove NIUs
+person['taxinc'].replace({9999999: 0}, inplace=True)
+person['adjginc'].replace({99999999: 0}, inplace=True)
+person['incss'].replace({999999: 0}, inplace=True)
+person['incssi'].replace({999999: 0}, inplace=True)
+person['incunemp'].replace({99999: 0}, inplace=True)
+person['incunemp'].replace({999999: 0}, inplace=True)
+person['ctccrd'].replace({999999: 0}, inplace=True)
+person['actccrd'].replace({99999: 0}, inplace=True)
+person['eitcred'].replace({9999: 0}, inplace=True)
+person['fica'].replace({99999: 0}, inplace=True)
+person['fedtaxac'].replace({99999999: 0}, inplace=True)
+
+# Aggregate deductible and refundable child tax credits
+person['ctc'] = person.ctccrd + person.actccrd
+
+# Determine people originally in poverty
+person['original_poor'] = person.spmtotres < person.spmthresh
+
+# Calculate the number of people per smp unit
+person['person'] = 1
+person['person'] = 1
+spm = person.groupby(['spmfamunit'])[['person']].sum()
+spm.columns = ['numper']
+person = person.merge(spm,left_on=['spmfamunit'],
+                      right_index=True)
+
+# Calculate populations
 population = person.asecwt.sum()
+child_population = (person.child * person.asecwt)
+non_citizen_population = (person.non_citizen * person.asecwt)
+
+# Calculate orginal poverty rate
 original_total_poor = (person.original_poor * person.asecwt).sum()
 original_poverty_rate = (original_total_poor / population) * 100
 
-spmu = person.drop_duplicates(subset=['spmfamunit'])
-spmu['original_poverty_gap'] = person.spmthresh - person.spmtotres
-original_poverty_gap = (((spmu.original_poor * spmu.original_poverty_gap *
-                         spmu.asecwth).sum()))
+# Create dataframe with aggregated spm unit data
+PERSON_COLUMNS = ['adjginc', 'fica','fedtaxac', 'ctc', 'incssi', 'incunemp', 'eitcred', 'child', 'non_citizen', 'person']
+SPMU_COLUMNS = ['spmheat', 'spmsnap', 'spmfamunit', 'spmthresh', 'spmtotres']
 
-# Calculate original child poverty
-child_population = (person.child * person.asecwt).sum()
-original_child_poor = (person.child * person.original_poor * person.asecwt).sum()
-original_child_poverty_rate = (original_child_poor / child_population) * 100
+spmu = person.groupby(SPMU_COLUMNS)[PERSON_COLUMNS].sum().reset_index()
+spmu[['fica','fedtaxac']] *= -1
+spmu.rename(columns={'person':'numper'}, inplace=True)
 
-# Calculate original adult poverty
-adult_population = (person.adult * person.asecwt).sum()
-original_adult_poor = (person.adult * person.original_poor * person.asecwt).sum()
-original_adult_poverty_rate = (original_adult_poor / adult_population) * 100
+sub_person = person[['spmfamunit', 'spmwt']]
+spmu = spmu.merge(sub_person, on=['spmfamunit'])
 
-# Calculate original pwd poverty
-pwd_population = (person.pwd * person.asecwt).sum()
-original_pwd_poor = (person.pwd * person.original_poor * person.asecwt).sum()
-original_pwd_poverty_rate = (original_pwd_poor / pwd_population) * 100
+# Calculate the original poverty gap
+spmu['poverty_gap'] = np.where(spmu.spmtotres < spmu.spmthresh, 
+                              spmu.spmthresh - spmu.spmtotres, 0)
 
-# Calculate original White poverty
-white_population = (person.white_non_hispanic * person.asecwt).sum()
-original_white_poor = (person.white_non_hispanic * person.original_poor * person.asecwt).sum()
-original_white_poverty_rate = (original_white_poor / white_population) * 100
+original_poverty_gap = mdf.weighted_sum(spmu, 'poverty_gap', 'spmwt')
 
-# Calculate original Black poverty
-black_population = (person.black * person.asecwt).sum()
-original_black_poor = (person.black * person.original_poor * person.asecwt).sum()
-original_black_poverty_rate = (original_black_poor / black_population) * 100
+# Calculate the orginal demographic poverty rates
+def pov_rate(column):
+    return mdf.weighted_mean(person[person[column]], 'original_poor', 'asecwt') * 100
 
-# Calculate original Hispanic poverty
-hispanic_population = (person.hispanic * person.asecwt).sum()
-original_hispanic_poor = (person.hispanic * person.original_poor * person.asecwt).sum()
-original_hispanic_poverty_rate = (original_hispanic_poor / hispanic_population) * 100
+original_child_poverty_rate = pov_rate('child')
+original_adult_poverty_rate = pov_rate('adult')
+original_pwd_poverty_rate = pov_rate('pwd')
+original_white_poverty_rate = pov_rate('white_non_hispanic')
+original_black_poverty_rate = pov_rate('black')
+original_hispanic_poverty_rate = pov_rate('hispanic')
 
 # Caluclate original gini
+person['spm_resources_per_person'] = person.spmtotres / person.numper
 gini = (mdf.gini(person, 'spm_resources_per_person' , 'asecwt'))
 
+# Create the inputs card
 card_main = dbc.Card(
     [
         dbc.CardBody(
@@ -121,8 +159,21 @@ card_main = dbc.Card(
                                       }
                         ),
                         html.Div(id='slider-output-container'),
-                
                                 html.Br(),
+                html.Label(['Exclude from UBI:'],style={'font-weight': 'bold',
+                                                            "text-align": "center",
+                                                             "color":"white",
+                                                            'fontSize':20}),
+                dcc.Checklist(id='my-checklist3',
+                                options=[
+                                    {'label': 'non-Citizens', 'value': 'non_citizens'},
+                                    {'label': 'Children', 'value': 'children'},
+                                ],
+                                value=[],
+                              labelStyle={'display': 'block'}
+                            ),
+                html.Br(),
+                
             ]
         ),
     ],
@@ -130,11 +181,13 @@ card_main = dbc.Card(
     outline=False,
 )
 
+# Create the summary figure output card
 card_graph = dbc.Card(
         dcc.Graph(id='my-graph',
               figure={}), body=True, color="info",
 )
 
+# Create the poverty breakdown figure output card
 card_graph2 = dbc.Card(
         dcc.Graph(id='my-graph2',
               figure={}), body=True, color="info",
@@ -145,6 +198,7 @@ app = dash.Dash(__name__,
 
 server = app.server
 
+# Design the app
 app.layout = html.Div([
         # Row 1 - header
         dbc.Row(
@@ -184,149 +238,160 @@ app.layout = html.Div([
     html.Br(),
 ])
 
+# Assign callbacks
 @app.callback(
     Output(component_id='my-graph', component_property='figure'),
     Output(component_id='my-graph2', component_property='figure'),
     Input(component_id='agi-slider', component_property='value'),
     Input(component_id='my-checklist', component_property='value'),
-    Input(component_id='my-checklist2', component_property='value')
+    Input(component_id='my-checklist2', component_property='value'),
+    Input(component_id='my-checklist3', component_property='value')
 )
-def ubi(agi_tax, benefits, taxes): 
-    target_persons = person.copy(deep=True) 
+def ubi(agi_tax, benefits, taxes, exclude):
     
-    # Calculate the new taxes from tax on AGI
+    # combine lists and initialize
+    taxes_benefits = taxes + benefits
+    spmu['new_resources'] = spmu.spmtotres
+    revenue = 0
+    
+    # Calculate the new revenue and spmu resources from tax and benefit change
+    for tax_benefit in taxes_benefits:
+        if not ('fedtaxac' in taxes_benefits) and (tax_benefit in ['eitc', 'ctc']):
+            spmu.new_resources -= spmu[tax_benefit]
+            revenue += mdf.weighted_sum(spmu, 'tax_benefit', 'spmwt')
+    
+    # Calculate the new taxes from flat tax on AGI
     tax_rate = agi_tax / 100
-    target_persons['new_taxes'] = target_persons.adjginc * tax_rate
+    spmu['new_taxes'] = spmu.adjginc * tax_rate
     
-    # Calculate the total tax increase of an SPM unit
-    spmu = target_persons.groupby(['spmfamunit'])[['new_taxes']].sum()
-    spmu.columns = ['total_tax_increase']
-    target_persons = target_persons.merge(spmu,left_on=['spmfamunit'],
-                                           right_index=True)
+    spmu.new_resources -= spmu.new_taxes
+    revenue += mdf.weighted_sum(spmu, 'new_taxes', 'spmwt')
     
-    # Calculate funding from taxes
-    funding = (target_persons.new_taxes * target_persons.asecwt).sum()
+    # Calculate the total UBI a spmu recieves based on exclusions
+    if ('children' in exclude) and ('non_citizens' not in exclude):
+        ubi_population = population - child_population
+        ubi = revenue / ubi_population
+        spmu['total_ubi'] = ubi * (spmu.numper - spmu.child)
     
-    #Calculate SPM unit new resources after taxes
-    target_persons['new_spm_resources'] = target_persons.spmtotres - target_persons.total_tax_increase
+    if ('children' not in exclude) and ('non_citizens' in exclude):
+        ubi_population = population - non_citizen_population
+        ubi = revenue / ubi_population
+        spmu['total_ubi'] = ubi * (spmu.numper - spmu.non_citizen)
     
-    if 'ssi' in benefits:
-        funding += (target_persons.incssi * target_persons.asecwt).sum()
-        target_persons.new_spm_resources -= target_persons.incssi
+    if ('children' in exclude) and ('non_citizens' in exclude):
+        ubi_population = population - non_citizen_population - child_population
+        ubi = revenue / ubi_population
+        spmu['total_ubi'] = ubi * (spmu.numper - spmu.child - spmu.non_citizen)
     
-    if 'unemp' in benefits:
-        funding += (target_persons.incunemp * target_persons.asecwt).sum()
-        target_persons.new_spm_resources -= target_persons.incunemp
-        
-    if 'eitc' in benefits:
-        funding += (target_persons.eitcred * target_persons.asecwt).sum()
-        target_persons.new_spm_resources -= target_persons.spmeitc
-        
-    if 'ctc' in benefits:
-        funding += (target_persons.ctc * target_persons.asecwt).sum()
-        target_persons.new_spm_resources -= target_persons.spmctc
-        
-    if 'snap' in benefits:
-        funding += (target_persons.snap_pp * target_persons.asecwt).sum()
-        target_persons.new_spm_resources -= target_persons.snap_pp
-        
-    if 'energy' in benefits:
-        funding += (target_persons.energy_pp * target_persons.asecwt).sum()
-        target_persons.new_spm_resources -= target_persons.energy_pp
+    else: 
+        ubi_population = population
+        ubi = revenue / ubi_population
+        spmu['total_ubi'] = ubi * spmu.numper
     
-    if 'income_taxes' in taxes:
-        funding -= (target_persons.fedtaxac * target_persons.asecwt).sum()
-        target_persons.new_spm_resources += target_persons.fedtaxac
+    # Calculate 
+    spmu.new_resources += spmu.total_ubi
+    spmu['new_resources_per_person'] = (spmu.new_resources /
+                                                  spmu.numper)
     
-    if 'fica' in taxes:
-        funding -= (target_persons.fica * target_persons.asecwt).sum()
-        target_persons.new_spm_resources += target_persons.fica
+    # Calculate poverty gap
+    spmu['new_poverty_gap'] = np.where(spmu.new_resources < spmu.spmthresh, 
+                               spmu.spmthresh - spmu.new_resources, 0)
+    poverty_gap = mdf.weighted_sum(spmu, 'new_poverty_gap', 'spmwt')
+    poverty_gap_change = ((poverty_gap - original_poverty_gap) /
+                        original_poverty_gap * 100).round(1)
     
-    if ('income_taxes' in taxes) & ('ctc' in benefits):
-        funding -= (target_persons.ctc * target_persons.asecwt).sum()
-        target_persons.new_spm_resources += target_persons.spmctc
-    
-    if ('income_taxes' in taxes) & ('eitc' in benefits):
-        funding -= (target_persons.eitcred * target_persons.asecwt).sum()
-        target_persons.new_spm_resources += target_persons.spmeitc
-    
-
-    ubi = funding / population
-    target_persons['total_ubi'] = ubi * target_persons.numper
-    target_persons.new_spm_resources += target_persons.total_ubi
-  
-    target_persons['new_resources_per_person'] = (target_persons.new_spm_resources /
-                                                  target_persons.numper)
+    # Merge person and spmu dataframes
+    sub_spmu = spmu[['spmfamunit', 'new_resources', 'new_resources_per_person']]
+    target_persons = person.merge(sub_spmu, on=['spmfamunit'])
     
     # Calculate the change in poverty rate
-    target_persons['poor'] = (target_persons.new_spm_resources < 
+    target_persons['poor'] = (target_persons.new_resources < 
                               target_persons.spmthresh)
     total_poor = (target_persons.poor * target_persons.asecwt).sum()
     poverty_rate = (total_poor / population) * 100
     poverty_rate_change = ((poverty_rate - original_poverty_rate) / 
                       original_poverty_rate * 100).round(2)
-    
-    # Calculate the change in child poverty
-    total_child_poor = (target_persons.child * target_persons.poor * target_persons.asecwt).sum()
-    child_poverty_rate = (total_child_poor / child_population) * 100
-    child_poverty_rate_change = ((child_poverty_rate - original_child_poverty_rate)/
-                                original_child_poverty_rate * 100).round(2)
-    
-    # Calculate the change in poverty gap
-    target_persons['poverty_gap'] = target_persons.spmthresh - target_persons.new_spm_resources
-    spmu = target_persons.drop_duplicates(subset=['spmfamunit'])
-    poverty_gap = (((spmu.poor * spmu.poverty_gap
-                             * spmu.asecwth).sum()))
-    poverty_gap_change = ((poverty_gap - original_poverty_gap) /
-                        original_poverty_gap * 100).round(1)
 
     # Calculate change in Gini
     new_gini = (mdf.gini(target_persons, 'new_resources_per_person' , 'asecwt'))
     gini_change = ((new_gini - gini) / gini * 100).round(2)
     
     # Calculate percent winners
-    target_persons['winner'] = (target_persons.new_spm_resources > 
+    target_persons['winner'] = (target_persons.new_resources > 
                                 target_persons.spmtotres)
     total_winners = (target_persons.winner * target_persons.asecwt).sum()
     percent_winners = (total_winners / population * 100).round(1)
     
-    # Calculate adult poverty
-    total_adult_poor = (target_persons.adult * target_persons.poor * target_persons.asecwt).sum()
-    adult_poverty_rate = (total_adult_poor / adult_population) * 100
+    # Calculate the new poverty rate for each demographic
+    def pv_rate(column):
+        return mdf.weighted_mean(target_persons[target_persons[column]], 'poor', 'asecwt') * 100
+        
+    child_poverty_rate = pv_rate('child')
+    adult_poverty_rate = pv_rate('adult')
+    pwd_poverty_rate = pv_rate('pwd')
+    white_poverty_rate = pv_rate('white_non_hispanic')
+    black_poverty_rate = pv_rate('black')
+    hispanic_poverty_rate = pv_rate('hispanic')
+
+    # Calculate the percent change in poverty rate for each demographic
+    child_poverty_rate_change = ((child_poverty_rate - original_child_poverty_rate)/
+                                original_child_poverty_rate * 100).round(2)
     adult_poverty_rate_change = ((adult_poverty_rate - original_adult_poverty_rate)/
                                 original_adult_poverty_rate * 100).round(2)
-    
-    # Calculate pwd poverty
-    total_pwd_poor = (target_persons.pwd * target_persons.poor * target_persons.asecwt).sum()
-    pwd_poverty_rate = (total_pwd_poor / pwd_population) * 100
     pwd_poverty_rate_change = ((pwd_poverty_rate - original_pwd_poverty_rate)/
                                 original_pwd_poverty_rate * 100).round(2)
-    
-    # Calculate White poverty
-    total_white_poor = (target_persons.white_non_hispanic * target_persons.poor * target_persons.asecwt).sum()
-    white_poverty_rate = (total_white_poor / white_population) * 100
     white_poverty_rate_change = ((white_poverty_rate - original_white_poverty_rate)/
                                 original_white_poverty_rate * 100).round(2)
-    
-    # Calculate Black poverty
-    total_black_poor = (target_persons.black * target_persons.poor * target_persons.asecwt).sum()
-    black_poverty_rate = (total_black_poor / black_population) * 100
     black_poverty_rate_change = ((black_poverty_rate - original_black_poverty_rate)/
                                 original_black_poverty_rate * 100).round(2)
-    
-    # Calculate Hispanic poverty
-    total_hispanic_poor = (target_persons.hispanic * target_persons.poor * target_persons.asecwt).sum()
-    hispanic_poverty_rate = (total_hispanic_poor / hispanic_population) * 100
     hispanic_poverty_rate_change = ((hispanic_poverty_rate - original_hispanic_poverty_rate)/
                                 original_hispanic_poverty_rate * 100).round(2)
     
+    # Convert UBI and winners to string for title of chart
     ubi_int = int(ubi)
     ubi_int = "{:,}".format(ubi_int)
     ubi_string = str(ubi_int)
     winners_string = str(percent_winners)
     
+    # Bar colors
+    BLUE = '#1976D2'
+    
+    # Create x-axis labels for each chart
+    x=['Poverty Rate', 'Poverty Gap', 'Inequality (Gini)']
     x2=['Child', 'Adult', 'People<br>with<br>disabilities', 'White<br>non<br>Hispanic', 'Black', 'Hispanic']
+    
+    # MAKE THESE TWO CHARS A SIMPLIFIED FUNCITON ONCE CODE IS WORKING AGAIN #
+    fig = go.Figure([go.Bar(x=x, y=[poverty_rate_change,
+                                    poverty_gap_change, 
+                                    gini_change],
+                            text=[poverty_rate_change,
+                                  poverty_gap_change,
+                                  gini_change],
+                           marker_color=BLUE)])
+    
+    # Edit text and display the UBI amount and percent winners in title
+    fig.update_layout(uniformtext_minsize=10, uniformtext_mode='hide', plot_bgcolor='white')
+    fig.update_traces(texttemplate='%{text}%', textposition='auto')
+    fig.update_layout(title_text='Your changes would fund an annual UBI of $'+ ubi_string + ' per person.<br>' + 
+                     winners_string + '% of people would be better off under this plan.')
+    
+    
+    fig.update_xaxes(
+        tickangle = 0,
+        title_text = "",
+        tickfont = {"size": 14},
+        title_standoff = 25)
 
+    fig.update_yaxes(
+        title_text = "Percent change",
+        ticksuffix ="%",
+        tickprefix = "",
+        tickfont = {'size':14},
+        title_standoff = 25)
+
+    fig.update_xaxes(title_font=dict(size=14, family='Roboto', color='black'))
+    fig.update_yaxes(title_font=dict(size=14, family='Roboto', color='black'))
+    
     fig2 = go.Figure([go.Bar(x=x2, y=[child_poverty_rate_change,
                                      adult_poverty_rate_change,
                                      pwd_poverty_rate_change,
@@ -361,35 +426,7 @@ def ubi(agi_tax, benefits, taxes):
     fig2.update_xaxes(title_font=dict(size=14, family='Roboto', color='black'))
     fig2.update_yaxes(title_font=dict(size=14, family='Roboto', color='black'))
     
-    x=['Poverty Rate', 'Poverty Gap', 'Inequality (Gini)']
-
-    fig = go.Figure([go.Bar(x=x, y=[child_poverty_rate_change, poverty_rate_change, poverty_gap_change, gini_change],
-                            text=[child_poverty_rate_change, poverty_rate_change, poverty_gap_change, gini_change],
-                           marker_color=BLUE)])
-    
-    fig.update_layout(uniformtext_minsize=10, uniformtext_mode='hide', plot_bgcolor='white')
-    fig.update_traces(texttemplate='%{text}%', textposition='auto')
-    fig.update_layout(title_text='Your changes would fund an annual UBI of $'+ ubi_string + ' per person.<br>' + 
-                     winners_string + '% of people would be better off under this plan.')
-
-    fig.update_xaxes(
-        tickangle = 0,
-        title_text = "",
-        tickfont = {"size": 14},
-        title_standoff = 25)
-
-    fig.update_yaxes(
-        title_text = "Percent change",
-        ticksuffix ="%",
-        tickprefix = "",
-        tickfont = {'size':14},
-        title_standoff = 25)
-
-    fig.update_xaxes(title_font=dict(size=14, family='Roboto', color='black'))
-    fig.update_yaxes(title_font=dict(size=14, family='Roboto', color='black'))
-    
     return fig, fig2
-
 
 if __name__ == '__main__':
     app.run_server(debug=True, port=8000, host='127.0.0.1')
