@@ -12,7 +12,7 @@ import microdf as mdf
 
 BLUE = '#1976D2'
 
-person = pd.read_csv('https://raw.githubusercontent.com/ngpsu22/Funding/main/person_ubi_funding%20(7).csv')
+person = pd.read_csv('https://github.com/UBICenter/us-calc/raw/main/person_us_calc.csv')
 
 # Calculate orginal poverty
 population = person.asecwt.sum()
@@ -34,10 +34,10 @@ adult_population = (person.adult * person.asecwt).sum()
 original_adult_poor = (person.adult * person.original_poor * person.asecwt).sum()
 original_adult_poverty_rate = (original_adult_poor / adult_population) * 100
 
-# Calculate original pwb poverty
-pwb_population = (person.pwb * person.asecwt).sum()
-original_pwb_poor = (person.pwb * person.original_poor * person.asecwt).sum()
-original_pwb_poverty_rate = (original_pwb_poor / pwb_population) * 100
+# Calculate original pwd poverty
+pwd_population = (person.pwd * person.asecwt).sum()
+original_pwd_poor = (person.pwd * person.original_poor * person.asecwt).sum()
+original_pwd_poverty_rate = (original_pwd_poor / pwd_population) * 100
 
 # Calculate original White poverty
 white_population = (person.white_non_hispanic * person.asecwt).sum()
@@ -139,7 +139,6 @@ card_graph2 = dbc.Card(
         dcc.Graph(id='my-graph2',
               figure={}), body=True, color="info",
 )
-
 
 app = dash.Dash(__name__,
                 external_stylesheets=[dbc.themes.FLATLY])
@@ -297,11 +296,11 @@ def ubi(agi_tax, benefits, taxes):
     adult_poverty_rate_change = ((adult_poverty_rate - original_adult_poverty_rate)/
                                 original_adult_poverty_rate * 100).round(2)
     
-    # Calculate pwb poverty
-    total_pwb_poor = (target_persons.pwb * target_persons.poor * target_persons.asecwt).sum()
-    pwb_poverty_rate = (total_pwb_poor / pwb_population) * 100
-    pwb_poverty_rate_change = ((pwb_poverty_rate - original_pwb_poverty_rate)/
-                                original_pwb_poverty_rate * 100).round(2)
+    # Calculate pwd poverty
+    total_pwd_poor = (target_persons.pwd * target_persons.poor * target_persons.asecwt).sum()
+    pwd_poverty_rate = (total_pwd_poor / pwd_population) * 100
+    pwd_poverty_rate_change = ((pwd_poverty_rate - original_pwd_poverty_rate)/
+                                original_pwd_poverty_rate * 100).round(2)
     
     # Calculate White poverty
     total_white_poor = (target_persons.white_non_hispanic * target_persons.poor * target_persons.asecwt).sum()
@@ -330,13 +329,13 @@ def ubi(agi_tax, benefits, taxes):
 
     fig2 = go.Figure([go.Bar(x=x2, y=[child_poverty_rate_change,
                                      adult_poverty_rate_change,
-                                     pwb_poverty_rate_change,
+                                     pwd_poverty_rate_change,
                                      white_poverty_rate_change,
                                      black_poverty_rate_change,
                                      hispanic_poverty_rate_change],
                             text=[child_poverty_rate_change,
                                      adult_poverty_rate_change,
-                                     pwb_poverty_rate_change,
+                                     pwd_poverty_rate_change,
                                      white_poverty_rate_change,
                                      black_poverty_rate_change,
                                      hispanic_poverty_rate_change],
