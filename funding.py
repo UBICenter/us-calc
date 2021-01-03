@@ -48,7 +48,6 @@ person['original_poor'] = person.spmtotres < person.spmthresh
 
 # Calculate the number of people per smp unit
 person['person'] = 1
-person['person'] = 1
 spm = person.groupby(['spmfamunit'])[['person']].sum()
 spm.columns = ['numper']
 person = person.merge(spm,left_on=['spmfamunit'],
@@ -60,7 +59,7 @@ child_population = (person.child * person.asecwt).sum()
 non_citizen_population = (person.non_citizen * person.asecwt).sum()
 non_citizen_child_population = (person.non_citizen_child * person.asecwt).sum()
 
-# Calculate orginal poverty rate
+# Calculate original poverty rate
 original_total_poor = (person.original_poor * person.asecwt).sum()
 original_poverty_rate = (original_total_poor / population) * 100
 
@@ -91,7 +90,36 @@ original_hispanic_poverty_rate = pov_rate('hispanic')
 
 # Caluclate original gini
 person['spm_resources_per_person'] = person.spmtotres / person.numper
-gini = (mdf.gini(person, 'spm_resources_per_person' , 'asecwt'))
+original_gini = (mdf.gini(person, 'spm_resources_per_person' , 'asecwt'))
+
+# Bar colors
+BLUE = '#1976D2'
+
+# def bar_chart(x, y, title_text):
+#     fig = go.Figure([go.Bar(x=x, 
+#                             y=y,
+#                             text=y,
+#                             marker_color=BLUE)])
+        
+#     fig.update_layout(uniformtext_minsize=10, uniformtext_mode='hide', plot_bgcolor='white')
+#     fig.update_traces(texttemplate='%{text}%', textposition='auto')
+#     fig.update_layout(title_text=title_text)
+        
+#     fig.update_xaxes(
+#         tickangle = 0,
+#         title_text = "",
+#         tickfont = {"size": 14},
+#         title_standoff = 25)
+
+#     fig.update_yaxes(
+#         title_text = "Percent change",
+#         ticksuffix ="%",
+#         tickprefix = "",
+#         tickfont = {'size':14},
+#         title_standoff = 25)
+
+#     fig.update_xaxes(title_font=dict(size=14, family='Roboto', color='black'))
+#     fig.update_yaxes(title_font=dict(size=14, family='Roboto', color='black'))
 
 # Create the inputs card
 card_main = dbc.Card(
@@ -106,7 +134,7 @@ card_main = dbc.Card(
                                                             "text-align": "center",
                                                             "color": 'white',
                                                             'fontSize':20}),
-                dcc.Checklist(id='my-checklist',
+                dcc.Checklist(id='benefits-checklist',
                                 options=[
                                     {'label': '  Child Tax Credit', 'value': 'ctc'},
                                     {'label': '  Supplemental Security Income (SSI)', 'value': 'incssi'},
@@ -126,7 +154,7 @@ card_main = dbc.Card(
                                                             'fontSize':20}),
                 
                 html.Br(),
-                dcc.Checklist(id='my-checklist2',
+                dcc.Checklist(id='taxes-checklist',
                                 options=[
                                     {'label': 'Income taxes', 'value': 'fedtaxac'},
                                     {'label': 'Employee side payroll', 'value': 'fica'},
@@ -163,7 +191,7 @@ card_main = dbc.Card(
                                                             "text-align": "center",
                                                              "color":"white",
                                                             'fontSize':20}),
-                dcc.Checklist(id='my-checklist3',
+                dcc.Checklist(id='exclude-checklist',
                                 options=[
                                     {'label': 'non-Citizens', 'value': 'non_citizens'},
                                     {'label': 'Children', 'value': 'children'},
@@ -191,6 +219,7 @@ card_graph2 = dbc.Card(
         dcc.Graph(id='my-graph2',
               figure={}), body=True, color="info",
 )
+
 
 app = dash.Dash(__name__,
                 external_stylesheets=[dbc.themes.FLATLY])
@@ -242,9 +271,9 @@ app.layout = html.Div([
     Output(component_id='my-graph', component_property='figure'),
     Output(component_id='my-graph2', component_property='figure'),
     Input(component_id='agi-slider', component_property='value'),
-    Input(component_id='my-checklist', component_property='value'),
-    Input(component_id='my-checklist2', component_property='value'),
-    Input(component_id='my-checklist3', component_property='value')
+    Input(component_id='benefits-checklist', component_property='value'),
+    Input(component_id='taxes-checklist', component_property='value'),
+    Input(component_id='exclude-checklist', component_property='value')
 )
 def ubi(agi_tax, benefits, taxes, exclude):
     
@@ -310,8 +339,8 @@ def ubi(agi_tax, benefits, taxes, exclude):
                       original_poverty_rate * 100).round(2)
 
     # Calculate change in Gini
-    new_gini = (mdf.gini(target_persons, 'new_resources_per_person' , 'asecwt'))
-    gini_change = ((new_gini - gini) / gini * 100).round(2)
+    gini = (mdf.gini(target_persons, 'new_resources_per_person' , 'asecwt'))
+    gini_change = ((gini - original_gini) / original_gini * 100).round(2)
     
     # Calculate percent winners
     target_persons['winner'] = (target_persons.new_resources > 
@@ -350,15 +379,30 @@ def ubi(agi_tax, benefits, taxes, exclude):
     ubi_string = str(ubi_int)
     winners_string = str(percent_winners)
     revenue_string = str(revenue)
+        
+#     fig = bar_chart(
+#             x=['Poverty Rate', 'Poverty Gap', 'Inequality (Gini)'],
+#             y=[poverty_rate_change, poverty_gap_change, gini_change],
+#             title_text='Your changes would fund an annual UBI of $'+ ubi_string + ' per person.<br>' + 
+#                      winners_string + '% of people would be better off under this plan.')
     
-    # Bar colors
-    BLUE = '#1976D2'
+#     fig2 = bar_chart(
+#             x=['Child', 'Adult', 'People<br>with<br>disabilities', 'White<br>non<br>Hispanic', 'Black', 'Hispanic'],
+#             y=[child_poverty_rate_change,
+#                adult_poverty_rate_change,
+#                pwd_poverty_rate_change,
+#                white_poverty_rate_change,
+#                black_poverty_rate_change,
+#                hispanic_poverty_rate_change],
+#             title_text='Poverty rate breakdown')
     
+        
     # Create x-axis labels for each chart
     x=['Poverty Rate', 'Poverty Gap', 'Inequality (Gini)']
     x2=['Child', 'Adult', 'People<br>with<br>disabilities', 'White<br>non<br>Hispanic', 'Black', 'Hispanic']
     
-    # MAKE THESE TWO CHARS A SIMPLIFIED FUNCITON ONCE CODE IS WORKING AGAIN #
+    
+    
     fig = go.Figure([go.Bar(x=x, y=[poverty_rate_change,
                                     poverty_gap_change, 
                                     gini_change],
@@ -371,7 +415,7 @@ def ubi(agi_tax, benefits, taxes, exclude):
     fig.update_layout(uniformtext_minsize=10, uniformtext_mode='hide', plot_bgcolor='white')
     fig.update_traces(texttemplate='%{text}%', textposition='auto')
     fig.update_layout(title_text='Your changes would fund an annual UBI of $'+ ubi_string + ' per person.<br>' + 
-                     winners_string + '% of people would be better off under this plan.' + revenue_string)
+                     winners_string + '% of people would be better off under this plan.')
     
     fig.update_xaxes(
         tickangle = 0,
