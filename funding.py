@@ -92,18 +92,28 @@ original_hispanic_poverty_rate = pov_rate('hispanic')
 person['spm_resources_per_person'] = person.spmtotres / person.numper
 original_gini = (mdf.gini(person, 'spm_resources_per_person' , 'asecwt'))
 
-# Bar colors
+# Colors
 BLUE = '#1976D2'
+LIGHT_BLUE = "#90CAF9"
+GRAY = "#BDBDBD"
 
-# def bar_chart(x, y, title_text):
+# def bar_chart(x, y, title_text, hovertemplate):
 #     fig = go.Figure([go.Bar(x=x, 
 #                             y=y,
 #                             text=y,
+#                             hovertemplate = hovertemplate
 #                             marker_color=BLUE)])
         
 #     fig.update_layout(uniformtext_minsize=10, uniformtext_mode='hide', plot_bgcolor='white')
 #     fig.update_traces(texttemplate='%{text}%', textposition='auto')
 #     fig.update_layout(title_text=title_text)
+
+#     fig.update_layout(
+#     hoverlabel=dict(
+#         bgcolor='white',
+#         font_size=14,
+#         font_family="Roboto"
+#     ))
         
 #     fig.update_xaxes(
 #         tickangle = 0,
@@ -120,6 +130,7 @@ BLUE = '#1976D2'
 
 #     fig.update_xaxes(title_font=dict(size=14, family='Roboto', color='black'))
 #     fig.update_yaxes(title_font=dict(size=14, family='Roboto', color='black'))
+
 
 # Create the inputs card
 card_main = dbc.Card(
@@ -219,7 +230,6 @@ card_graph2 = dbc.Card(
         dcc.Graph(id='my-graph2',
               figure={}), body=True, color="info",
 )
-
 
 app = dash.Dash(__name__,
                 external_stylesheets=[dbc.themes.FLATLY])
@@ -336,11 +346,11 @@ def ubi(agi_tax, benefits, taxes, exclude):
     total_poor = (target_persons.poor * target_persons.asecwt).sum()
     poverty_rate = (total_poor / population) * 100
     poverty_rate_change = ((poverty_rate - original_poverty_rate) / 
-                      original_poverty_rate * 100).round(2)
+                      original_poverty_rate * 100).round(1)
 
     # Calculate change in Gini
     gini = (mdf.gini(target_persons, 'new_resources_per_person' , 'asecwt'))
-    gini_change = ((gini - original_gini) / original_gini * 100).round(2)
+    gini_change = ((gini - original_gini) / original_gini * 100).round(1)
     
     # Calculate percent winners
     target_persons['winner'] = (target_persons.new_resources > 
@@ -361,30 +371,62 @@ def ubi(agi_tax, benefits, taxes, exclude):
 
     # Calculate the percent change in poverty rate for each demographic
     child_poverty_rate_change = ((child_poverty_rate - original_child_poverty_rate)/
-                                original_child_poverty_rate * 100).round(2)
+                                original_child_poverty_rate * 100).round(1)
     adult_poverty_rate_change = ((adult_poverty_rate - original_adult_poverty_rate)/
-                                original_adult_poverty_rate * 100).round(2)
+                                original_adult_poverty_rate * 100).round(1)
     pwd_poverty_rate_change = ((pwd_poverty_rate - original_pwd_poverty_rate)/
-                                original_pwd_poverty_rate * 100).round(2)
+                                original_pwd_poverty_rate * 100).round(1)
     white_poverty_rate_change = ((white_poverty_rate - original_white_poverty_rate)/
-                                original_white_poverty_rate * 100).round(2)
+                                original_white_poverty_rate * 100).round(1)
     black_poverty_rate_change = ((black_poverty_rate - original_black_poverty_rate)/
-                                original_black_poverty_rate * 100).round(2)
+                                original_black_poverty_rate * 100).round(1)
     hispanic_poverty_rate_change = ((hispanic_poverty_rate - original_hispanic_poverty_rate)/
-                                original_hispanic_poverty_rate * 100).round(2)
+                                original_hispanic_poverty_rate * 100).round(1)
+    
+    # Round all numbers for display in hover
+    original_poverty_rate_string = str(round(original_poverty_rate, 1))
+    poverty_rate_string = str(round(poverty_rate, 1))
+    original_child_poverty_rate_string = str(round(original_child_poverty_rate, 1))
+    child_poverty_rate_string = str(round(child_poverty_rate, 1))
+    original_adult_poverty_rate_string = str(round(original_adult_poverty_rate, 1))
+    adult_poverty_rate_string = str(round(adult_poverty_rate, 1))
+    original_pwd_poverty_rate_string = str(round(original_pwd_poverty_rate, 1))
+    pwd_poverty_rate_string = str(round(pwd_poverty_rate, 1))
+    original_white_poverty_rate_string = str(round(original_white_poverty_rate, 1))
+    white_poverty_rate_string = str(round(white_poverty_rate, 1))
+    original_black_poverty_rate_string = str(round(original_black_poverty_rate, 1))
+    black_poverty_rate_string = str(round(black_poverty_rate, 1))
+    original_hispanic_poverty_rate_string = str(round(original_hispanic_poverty_rate, 1))
+    hispanic_poverty_rate_string = str(round(hispanic_poverty_rate, 1))
+    
+    original_poverty_gap_billions = original_poverty_gap / 1e9
+    original_poverty_gap_billions = int(original_poverty_gap_billions)
+    original_poverty_gap_billions = "{:,}".format(original_poverty_gap_billions)
+    
+    poverty_gap_billions = poverty_gap / 1e9
+    poverty_gap_billions = int(poverty_gap_billions)
+    poverty_gap_billions = "{:,}".format(poverty_gap_billions)
+    
+    original_gini_string = str(round(original_gini, 3))
+    gini_string = str(round(gini, 3))
     
     # Convert UBI and winners to string for title of chart
     ubi_int = int(ubi)
     ubi_int = "{:,}".format(ubi_int)
     ubi_string = str(ubi_int)
     winners_string = str(percent_winners)
-    revenue_string = str(revenue)
         
 #     fig = bar_chart(
 #             x=['Poverty Rate', 'Poverty Gap', 'Inequality (Gini)'],
 #             y=[poverty_rate_change, poverty_gap_change, gini_change],
 #             title_text='Your changes would fund an annual UBI of $'+ ubi_string + ' per person.<br>' + 
-#                      winners_string + '% of people would be better off under this plan.')
+#                      winners_string + '% of people would be better off under this plan.'
+#                hovertemplate=['Original poverty rate: ' + original_poverty_rate_string + '%<br>'
+#                                        'New poverty rate: ' + poverty_rate_string + '%',
+#                                        'Original poverty gap: $' + original_poverty_gap_billions + 'B<br>'
+#                                        'New poverty gap: $' + poverty_gap_billions + 'B',
+#                                        'Original gini: ' + original_gini_string +
+#                                        '<br>New gini: ' + gini_string],)
     
 #     fig2 = bar_chart(
 #             x=['Child', 'Adult', 'People<br>with<br>disabilities', 'White<br>non<br>Hispanic', 'Black', 'Hispanic'],
@@ -394,14 +436,26 @@ def ubi(agi_tax, benefits, taxes, exclude):
 #                white_poverty_rate_change,
 #                black_poverty_rate_change,
 #                hispanic_poverty_rate_change],
-#             title_text='Poverty rate breakdown')
+#             title_text='Poverty rate breakdown'
+#             hovertemplate=['Original child poverty rate: ' + original_child_poverty_rate_string + '%<br>'
+#                                        'New child poverty rate: ' + child_poverty_rate_string + '%',
+#                                              'Original adult poverty rate: ' + original_adult_poverty_rate_string + '%<br>'
+#                                        'New adult poverty rate: ' + adult_poverty_rate_string + '%',
+#                                              'Original pwd poverty rate: ' + original_pwd_poverty_rate_string + '%<br>'
+#                                        'New pwd poverty rate: ' + pwd_poverty_rate_string + '%',
+#                                              'Original White poverty rate: ' + original_white_poverty_rate_string + '%<br>'
+#                                        'New White poverty rate: ' + white_poverty_rate_string + '%',
+#                                              'Original Black poverty rate: ' + original_black_poverty_rate_string + '%<br>'
+#                                        'New Black poverty rate: ' + black_poverty_rate_string + '%',
+#                                              'Original Hispanic poverty rate: ' + original_hispanic_poverty_rate_string + '%<br>'
+#                                        'New Hispanic poverty rate: ' + hispanic_poverty_rate_string + '%',
+#                                             ],        
+# )
     
         
-    # Create x-axis labels for each chart
+    #Create x-axis labels for each chart
     x=['Poverty Rate', 'Poverty Gap', 'Inequality (Gini)']
     x2=['Child', 'Adult', 'People<br>with<br>disabilities', 'White<br>non<br>Hispanic', 'Black', 'Hispanic']
-    
-    
     
     fig = go.Figure([go.Bar(x=x, y=[poverty_rate_change,
                                     poverty_gap_change, 
@@ -409,6 +463,12 @@ def ubi(agi_tax, benefits, taxes, exclude):
                             text=[poverty_rate_change,
                                   poverty_gap_change,
                                   gini_change],
+                            hovertemplate=['Original poverty rate: ' + original_poverty_rate_string + '%<br>'
+                                       'New poverty rate: ' + poverty_rate_string + '%',
+                                       'Original poverty gap: $' + original_poverty_gap_billions + 'B<br>'
+                                       'New poverty gap: $' + poverty_gap_billions + 'B',
+                                       'Original gini: ' + original_gini_string +
+                                       '<br>New gini: ' + gini_string],
                            marker_color=BLUE)])
     
     # Edit text and display the UBI amount and percent winners in title
@@ -429,6 +489,13 @@ def ubi(agi_tax, benefits, taxes, exclude):
         tickprefix = "",
         tickfont = {'size':14},
         title_standoff = 25)
+    
+    fig.update_layout(
+    hoverlabel=dict(
+        bgcolor='white',
+        font_size=14,
+        font_family="Roboto"
+    ))
 
     fig.update_xaxes(title_font=dict(size=14, family='Roboto', color='black'))
     fig.update_yaxes(title_font=dict(size=14, family='Roboto', color='black'))
@@ -445,6 +512,19 @@ def ubi(agi_tax, benefits, taxes, exclude):
                                      white_poverty_rate_change,
                                      black_poverty_rate_change,
                                      hispanic_poverty_rate_change],
+                              hovertemplate=['Original child poverty rate: ' + original_child_poverty_rate_string + '%<br>'
+                                       'New child poverty rate: ' + child_poverty_rate_string + '%',
+                                             'Original adult poverty rate: ' + original_adult_poverty_rate_string + '%<br>'
+                                       'New adult poverty rate: ' + adult_poverty_rate_string + '%',
+                                             'Original pwd poverty rate: ' + original_pwd_poverty_rate_string + '%<br>'
+                                       'New pwd poverty rate: ' + pwd_poverty_rate_string + '%',
+                                             'Original White poverty rate: ' + original_white_poverty_rate_string + '%<br>'
+                                       'New White poverty rate: ' + white_poverty_rate_string + '%',
+                                             'Original Black poverty rate: ' + original_black_poverty_rate_string + '%<br>'
+                                       'New Black poverty rate: ' + black_poverty_rate_string + '%',
+                                             'Original Hispanic poverty rate: ' + original_hispanic_poverty_rate_string + '%<br>'
+                                       'New Hispanic poverty rate: ' + hispanic_poverty_rate_string + '%',
+                                            ],
                            marker_color=BLUE)])
     
     fig2.update_layout(uniformtext_minsize=10, uniformtext_mode='hide', plot_bgcolor='white')
@@ -468,6 +548,7 @@ def ubi(agi_tax, benefits, taxes, exclude):
     fig2.update_yaxes(title_font=dict(size=14, family='Roboto', color='black'))
     
     return fig, fig2
+
 
 if __name__ == '__main__':
     app.run_server(debug=True, port=8000, host='127.0.0.1')
