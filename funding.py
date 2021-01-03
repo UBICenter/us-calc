@@ -21,10 +21,11 @@ person['adult'] = person.age > 17
 person['child'] = person.age < 18
 
 person['black'] = person.race == 200
-person['white_non_hispanic'] = ((person.race == 100) & (person.hispan == 000))
+person['white_non_hispanic'] = ((person.race == 100) & (person.hispan == 0))
 person['hispanic'] = ((person.hispan > 1) & person.hispan < 700)
 person['pwd'] = person.diffany == 2
 person['non_citizen'] = person.citizen == 5
+person['non_citizen_child'] = (person.citizen == 5) & (person.age < 18)
 
 # Remove NIUs
 person['taxinc'].replace({9999999: 0}, inplace=True)
@@ -55,23 +56,21 @@ person = person.merge(spm,left_on=['spmfamunit'],
 
 # Calculate populations
 population = person.asecwt.sum()
-child_population = (person.child * person.asecwt)
-non_citizen_population = (person.non_citizen * person.asecwt)
+child_population = (person.child * person.asecwt).sum()
+non_citizen_population = (person.non_citizen * person.asecwt).sum()
+non_citizen_child_population = (person.non_citizen_child * person.asecwt).sum()
 
 # Calculate orginal poverty rate
 original_total_poor = (person.original_poor * person.asecwt).sum()
 original_poverty_rate = (original_total_poor / population) * 100
 
 # Create dataframe with aggregated spm unit data
-PERSON_COLUMNS = ['adjginc', 'fica','fedtaxac', 'ctc', 'incssi', 'incunemp', 'eitcred', 'child', 'non_citizen', 'person']
-SPMU_COLUMNS = ['spmheat', 'spmsnap', 'spmfamunit', 'spmthresh', 'spmtotres']
+PERSON_COLUMNS = ['adjginc', 'fica','fedtaxac', 'ctc', 'incssi', 'incunemp', 'eitcred', 'child', 'non_citizen', 'non_citizen_child', 'person']
+SPMU_COLUMNS = ['spmheat', 'spmsnap', 'spmfamunit', 'spmthresh', 'spmtotres', 'spmwt']
 
 spmu = person.groupby(SPMU_COLUMNS)[PERSON_COLUMNS].sum().reset_index()
 spmu[['fica','fedtaxac']] *= -1
 spmu.rename(columns={'person':'numper'}, inplace=True)
-
-sub_person = person[['spmfamunit', 'spmwt']]
-spmu = spmu.merge(sub_person, on=['spmfamunit'])
 
 # Calculate the original poverty gap
 spmu['poverty_gap'] = np.where(spmu.spmtotres < spmu.spmthresh, 
@@ -110,11 +109,11 @@ card_main = dbc.Card(
                 dcc.Checklist(id='my-checklist',
                                 options=[
                                     {'label': '  Child Tax Credit', 'value': 'ctc'},
-                                    {'label': '  Supplemental Security Income (SSI)', 'value': 'ssi'},
-                                    {'label': '  Snap (food stamps)', 'value': 'snap'},
-                                    {'label': '  Earned Income Tax Credit', 'value': 'eitc'},
-                                    {'label': '  Unemployment', 'value': 'unemp'},
-                                    {'label': '  Energy Subsidy (LIHEAP)', 'value': 'energy'}
+                                    {'label': '  Supplemental Security Income (SSI)', 'value': 'incssi'},
+                                    {'label': '  Snap (food stamps)', 'value': 'spmsnap'},
+                                    {'label': '  Earned Income Tax Credit', 'value': 'eitcred'},
+                                    {'label': '  Unemployment', 'value': 'incunemp'},
+                                    {'label': '  Energy Subsidy (LIHEAP)', 'value': 'spmheat'}
                                     
                                 ],
                                 value=[],
@@ -129,7 +128,7 @@ card_main = dbc.Card(
                 html.Br(),
                 dcc.Checklist(id='my-checklist2',
                                 options=[
-                                    {'label': 'Income taxes', 'value': 'income_taxes'},
+                                    {'label': 'Income taxes', 'value': 'fedtaxac'},
                                     {'label': 'Employee side payroll', 'value': 'fica'},
                                 ],
                                 value=[],
@@ -256,9 +255,11 @@ def ubi(agi_tax, benefits, taxes, exclude):
     
     # Calculate the new revenue and spmu resources from tax and benefit change
     for tax_benefit in taxes_benefits:
-        if not ('fedtaxac' in taxes_benefits) and (tax_benefit in ['eitc', 'ctc']):
-            spmu.new_resources -= spmu[tax_benefit]
-            revenue += mdf.weighted_sum(spmu, 'tax_benefit', 'spmwt')
+        # skip eitc and ctc if fedtaxac also selected
+        if ('fedtaxac' in taxes_benefits) and (tax_benefit in ['eitc', 'ctc']):
+            next
+        spmu.new_resources -= spmu[tax_benefit]
+        revenue += mdf.weighted_sum(spmu, tax_benefit, 'spmwt')
     
     # Calculate the new taxes from flat tax on AGI
     tax_rate = agi_tax / 100
@@ -268,27 +269,23 @@ def ubi(agi_tax, benefits, taxes, exclude):
     revenue += mdf.weighted_sum(spmu, 'new_taxes', 'spmwt')
     
     # Calculate the total UBI a spmu recieves based on exclusions
-    if ('children' in exclude) and ('non_citizens' not in exclude):
-        ubi_population = population - child_population
-        ubi = revenue / ubi_population
-        spmu['total_ubi'] = ubi * (spmu.numper - spmu.child)
+    spmu['numper_ubi'] = spmu.numper
     
-    if ('children' not in exclude) and ('non_citizens' in exclude):
-        ubi_population = population - non_citizen_population
-        ubi = revenue / ubi_population
-        spmu['total_ubi'] = ubi * (spmu.numper - spmu.non_citizen)
+    if ('children' in exclude):
+        spmu['numper_ubi'] -= spmu.child
+    
+    if ('non_citizens' in exclude):
+        spmu['numper_ubi'] -= spmu.non_citizen
     
     if ('children' in exclude) and ('non_citizens' in exclude):
-        ubi_population = population - non_citizen_population - child_population
-        ubi = revenue / ubi_population
-        spmu['total_ubi'] = ubi * (spmu.numper - spmu.child - spmu.non_citizen)
+        spmu['numper_ubi'] += spmu.non_citizen_child
     
-    else: 
-        ubi_population = population
-        ubi = revenue / ubi_population
-        spmu['total_ubi'] = ubi * spmu.numper
-    
-    # Calculate 
+    # Assign UBI
+    ubi_population = (spmu.numper_ubi * spmu.spmwt).sum()
+    ubi = revenue / ubi_population
+    spmu['total_ubi'] = ubi * spmu.numper_ubi
+        
+    # Calculate change in resources
     spmu.new_resources += spmu.total_ubi
     spmu['new_resources_per_person'] = (spmu.new_resources /
                                                   spmu.numper)
@@ -352,6 +349,7 @@ def ubi(agi_tax, benefits, taxes, exclude):
     ubi_int = "{:,}".format(ubi_int)
     ubi_string = str(ubi_int)
     winners_string = str(percent_winners)
+    revenue_string = str(revenue)
     
     # Bar colors
     BLUE = '#1976D2'
@@ -373,8 +371,7 @@ def ubi(agi_tax, benefits, taxes, exclude):
     fig.update_layout(uniformtext_minsize=10, uniformtext_mode='hide', plot_bgcolor='white')
     fig.update_traces(texttemplate='%{text}%', textposition='auto')
     fig.update_layout(title_text='Your changes would fund an annual UBI of $'+ ubi_string + ' per person.<br>' + 
-                     winners_string + '% of people would be better off under this plan.')
-    
+                     winners_string + '% of people would be better off under this plan.' + revenue_string)
     
     fig.update_xaxes(
         tickangle = 0,
