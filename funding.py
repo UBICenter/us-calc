@@ -318,11 +318,16 @@ def ubi(statefip, agi_tax, benefits, taxes, exclude):
     
     # Calculate the new revenue and spmu resources from tax and benefit change
     for tax_benefit in taxes_benefits:
-        # skip eitc and ctc if fedtaxac also selected
-        if ('fedtaxac' in taxes_benefits) and (tax_benefit in ['eitc', 'ctc']):
-            next
         spmu.new_resources -= spmu[tax_benefit]
         revenue += mdf.weighted_sum(spmu, tax_benefit, 'spmwt')
+        
+    if ('fedtaxac' in taxes_benefits) & ('ctc' in taxes_benefits):
+        spmu.new_resources +=spmu.ctc
+        revenue -= mdf.weighted_sum(spmu, 'ctc', 'spmwt')
+
+    if ('fedtaxac' in taxes_benefits) & ('eitcred' in taxes_benefits):
+        spmu.new_resources +=spmu.eitcred
+        revenue -= mdf.weighted_sum(spmu, 'eitcred', 'spmwt')
     
     # Calculate the new taxes from flat tax on AGI
     tax_rate = agi_tax / 100
