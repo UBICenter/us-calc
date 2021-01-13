@@ -10,7 +10,7 @@ import dash_bootstrap_components as dbc
 import microdf as mdf
 
 # Import data from Ipums
-person_raw = pd.read_csv('https://github.com/UBICenter/us-calc/raw/main/cps_00040.csv.gz')
+person_raw = pd.read_csv('https://github.com/UBICenter/us-calc/raw/main/cps_00041.csv.gz')
 
 # Create copy and lower column names
 person = person_raw.copy(deep=True)
@@ -27,6 +27,7 @@ person['hispanic'] = ((person.hispan > 1) & person.hispan < 700)
 person['pwd'] = person.diffany == 2
 person['non_citizen'] = person.citizen == 5
 person['non_citizen_child'] = (person.citizen == 5) & (person.age < 18)
+person['non_citizen_adult'] = (person.citizen == 5) & (person.age > 17)
 
 # Remove NIUs
 person['taxinc'].replace({9999999: 0}, inplace=True)
@@ -40,6 +41,7 @@ person['actccrd'].replace({99999: 0}, inplace=True)
 person['eitcred'].replace({9999: 0}, inplace=True)
 person['fica'].replace({99999: 0}, inplace=True)
 person['fedtaxac'].replace({99999999: 0}, inplace=True)
+person['stataxac'].replace({9999999: 0}, inplace=True)
 
 # Change fip codes to state names
 person['statefip'] = person['statefip'].astype(str)
@@ -68,25 +70,37 @@ person['person'] = 1
 spm = person.groupby(['spmfamunit', 'year'])[['person']].sum()
 spm.columns = ['numper']
 person = person.merge(spm,left_on=['spmfamunit', 'year'],
-                      right_index=True)
+                       right_index=True)
+
+person['weighted_state_tax'] = (person.asecwt * person.stataxac)
+person['weighted_agi'] = (person.asecwt * person.adjginc)
+
+# Calculate the total taxable income and total people in each state
+state_groups_taxinc = person.groupby(['statefip'])[['weighted_state_tax','weighted_agi']].sum()
+state_groups_taxinc.columns = ['state_tax_revenue', 'state_taxable_income']
+person = person.merge(state_groups_taxinc, left_on=['statefip'], right_index=True)
 
 # Create dataframe with aggregated spm unit data
-PERSON_COLUMNS = ['adjginc', 'fica','fedtaxac', 'ctc', 'incssi', 'incunemp', 'eitcred', 'child', 'non_citizen', 'non_citizen_child', 'person']
-SPMU_COLUMNS = ['spmheat', 'spmsnap', 'spmfamunit', 'spmthresh', 'spmtotres', 'spmwt', 'year', 'statefip']
+PERSON_COLUMNS = ['adjginc', 'fica','fedtaxac', 'ctc', 'incssi', 'incunemp',
+                  'eitcred', 'child', 'adult', 'non_citizen',
+                  'non_citizen_child', 'non_citizen_adult', 'person', 'stataxac']
+SPMU_COLUMNS = ['spmheat', 'spmsnap', 'spmfamunit', 'spmthresh', 'spmtotres',
+                'spmwt', 'year', 'statefip', 'state_tax_revenue', 'state_taxable_income']
 
 spmu = person.groupby(SPMU_COLUMNS)[PERSON_COLUMNS].sum().reset_index()
-spmu[['fica','fedtaxac']] *= -1
+spmu[['fica','fedtaxac', 'stataxac']] *= -1
 spmu.rename(columns={'person':'numper'}, inplace=True)
 
 spmu.spmwt /= 3
 
 # Colors
 BLUE = '#1976D2'
-LIGHT_BLUE = "#90CAF9"
-GRAY = "#BDBDBD"
 
 states = person.statefip.unique().tolist()
 states.insert(0, "US")
+
+def change(new, old):
+    return ((new - old) / old * 100).round(2)
 
 # Create the inputs card
 cards = dbc.CardDeck(
@@ -103,8 +117,69 @@ cards = dbc.CardDeck(
                          options=[{'label':x, 'value':x}
                                   for x in sorted(states)],
                          ),
+                html.Br(),
+                html.Label(['Reform level:'],style={'font-weight': 'bold',
+                                                            "text-align": "center",
+                                                            "color": 'white',
+                                                            'fontSize':20}),
+                dcc.RadioItems(id='level',
+                            options=[
+                                {'label': 'Federal', 'value': 'federal'},
+                                {'label': 'State', 'value': 'state'},
+                                    ],
+                                    value='federal',
+                                    labelStyle={'display': 'block'}
+                                ),  
                             ]
         ),
+    ],
+    color="info",   
+    outline=False,
+),
+        
+                dbc.Card(
+            [
+        dbc.CardBody(
+            [
+                html.Label(['Repeal current taxes:'],style={'font-weight': 'bold',
+                                                            "text-align": "center",
+                                                             "color":"white",
+                                                            'fontSize':20}),
+                html.Br(),
+                dcc.Checklist(id='taxes-checklist',
+                                options=[
+                                    {'label': 'Income taxes', 'value': 'fedtaxac'},
+                                    {'label': 'Employee side payroll', 'value': 'fica'},
+                                ],
+                                value=[],
+                              labelStyle={'display': 'block'}
+                            ),
+                
+                 html.Br(),       
+                html.Label(['Add flat tax on AGI:'],style={'font-weight': 'bold',
+                                                            "text-align": "center",
+                                                             "color":"white",
+                                                            'fontSize':20}),
+                
+                dcc.Slider(
+                            id='agi-slider',
+                            min=0,
+                            max=50,
+                            step=1,
+                            value=0,
+                            tooltip = { 'always_visible': True, 'placement': 'bottom'},
+                            marks={0: {'label': '0%', 'style': {'color': '#F8F8FF'}},
+                                   10: {'label': '10%', 'style': {'color': '#F8F8FF'}},
+                                   20: {'label': '20%', 'style': {'color': '#F8F8FF'}},
+                                   30: {'label': '30%', 'style': {'color': '#F8F8FF'}},
+                                   40: {'label': '40%', 'style': {'color': '#F8F8FF'}},
+                                   50: {'label': '50%', 'style': {'color': '#F8F8FF'}},
+                                      }
+                        ),
+                        html.Div(id='slider-output-container')
+                            ]
+        ),
+        html.Br(),
     ],
     color="info",   
     outline=False,
@@ -135,54 +210,6 @@ cards = dbc.CardDeck(
     color="info",   
     outline=False,
 ),
-        dbc.Card(
-            [
-        dbc.CardBody(
-            [
-                html.Label(['Repeal current taxes:'],style={'font-weight': 'bold',
-                                                            "text-align": "center",
-                                                             "color":"white",
-                                                            'fontSize':20}),
-                html.Br(),
-                dcc.Checklist(id='taxes-checklist',
-                                options=[
-                                    {'label': 'Income taxes', 'value': 'fedtaxac'},
-                                    {'label': 'Employee side payroll', 'value': 'fica'},
-                                ],
-                                value=[],
-                              labelStyle={'display': 'block'}
-                            ),
-                
-                 html.Br(),
-                
-                html.Label(['Add flat tax on AGI:'],style={'font-weight': 'bold',
-                                                            "text-align": "center",
-                                                             "color":"white",
-                                                            'fontSize':20}),
-                
-                dcc.Slider(
-                            id='agi-slider',
-                            min=0,
-                            max=50,
-                            step=1,
-                            value=0,
-                            tooltip = { 'always_visible': True, 'placement': 'bottom'},
-                            marks={0: {'label': '0%', 'style': {'color': '#F8F8FF'}},
-                                   10: {'label': '10%', 'style': {'color': '#F8F8FF'}},
-                                   20: {'label': '20%', 'style': {'color': '#F8F8FF'}},
-                                   30: {'label': '30%', 'style': {'color': '#F8F8FF'}},
-                                   40: {'label': '40%', 'style': {'color': '#F8F8FF'}},
-                                   50: {'label': '50%', 'style': {'color': '#F8F8FF'}},
-                                      }
-                        ),
-                        html.Div(id='slider-output-container')
-                            ]
-        ),
-        html.Br(),
-    ],
-    color="info",   
-    outline=False,
-),
         
         dbc.Card([
         dbc.CardBody(
@@ -195,6 +222,7 @@ cards = dbc.CardDeck(
                                  options=[
                                      {'label': 'non-Citizens', 'value': 'non_citizens'},
                                      {'label': 'Children', 'value': 'children'},
+                                     {'label': 'Adult', 'value': 'adults'},
                                  ],
                                  value=[],
                                labelStyle={'display': 'block'}
@@ -218,6 +246,10 @@ charts = dbc.CardDeck([
               figure={}), body=True, color="info",
 )
 ])
+
+
+
+
 
 text = dbc.Card([
         dbc.CardBody(
@@ -304,64 +336,126 @@ app.layout = html.Div([
     Output(component_id='my-graph', component_property='figure'),
     Output(component_id='my-graph2', component_property='figure'),
     Input(component_id='state-dropdown', component_property='value'),
+    Input(component_id='level', component_property='value'),
     Input(component_id='agi-slider', component_property='value'),
     Input(component_id='benefits-checklist', component_property='value'),
     Input(component_id='taxes-checklist', component_property='value'),
     Input(component_id='exclude-checklist', component_property='value')
 )
-def ubi(statefip, agi_tax, benefits, taxes, exclude):
+def ubi(statefip, level, agi_tax, benefits, taxes, exclude):
     
-    # combine lists and initialize
-    taxes_benefits = taxes + benefits
-    spmu['new_resources'] = spmu.spmtotres
-    revenue = 0
-    
-    # Calculate the new revenue and spmu resources from tax and benefit change
-    for tax_benefit in taxes_benefits:
-        spmu.new_resources -= spmu[tax_benefit]
-        revenue += mdf.weighted_sum(spmu, tax_benefit, 'spmwt')
-        
-    if ('fedtaxac' in taxes_benefits) & ('ctc' in taxes_benefits):
-        spmu.new_resources +=spmu.ctc
-        revenue -= mdf.weighted_sum(spmu, 'ctc', 'spmwt')
+    if level == 'federal':
+        # combine lists and initialize
+        taxes_benefits = taxes + benefits
+        spmu['new_resources'] = spmu.spmtotres
+        revenue = 0
 
-    if ('fedtaxac' in taxes_benefits) & ('eitcred' in taxes_benefits):
-        spmu.new_resources +=spmu.eitcred
-        revenue -= mdf.weighted_sum(spmu, 'eitcred', 'spmwt')
+        # Calculate the new revenue and spmu resources from tax and benefit change
+        for tax_benefit in taxes_benefits:
+            spmu.new_resources -= spmu[tax_benefit]
+            revenue += mdf.weighted_sum(spmu, tax_benefit, 'spmwt')
+
+        if ('fedtaxac' in taxes_benefits) & ('ctc' in taxes_benefits):
+            spmu.new_resources +=spmu.ctc
+            revenue -= mdf.weighted_sum(spmu, 'ctc', 'spmwt')
+
+        if ('fedtaxac' in taxes_benefits) & ('eitcred' in taxes_benefits):
+            spmu.new_resources +=spmu.eitcred
+            revenue -= mdf.weighted_sum(spmu, 'eitcred', 'spmwt')
+
+        # Calculate the new taxes from flat tax on AGI
+        tax_rate = agi_tax / 100
+        spmu['new_taxes'] = spmu.adjginc * tax_rate
+
+        spmu.new_resources -= spmu.new_taxes
+        revenue += mdf.weighted_sum(spmu, 'new_taxes', 'spmwt')
+
+        # Calculate the total UBI a spmu recieves based on exclusions
+        spmu['numper_ubi'] = spmu.numper
+
+        if ('children' in exclude):
+            spmu['numper_ubi'] -= spmu.child
+
+        if ('non_citizens' in exclude):
+            spmu['numper_ubi'] -= spmu.non_citizen
+
+        if ('children' in exclude) and ('non_citizens' in exclude):
+            spmu['numper_ubi'] += spmu.non_citizen_child
+
+        if ('adults' in exclude):
+            spmu['numper_ubi'] -= spmu.adult
+
+        if ('adults' in exclude) and ('non_citizens' in exclude):
+            spmu['numper_ubi'] += spmu.non_citizen_adult
+
+        # Assign UBI
+        ubi_population = (spmu.numper_ubi * spmu.spmwt).sum()
+        ubi = revenue / ubi_population
+        spmu['total_ubi'] = ubi * spmu.numper_ubi
+
+        # Calculate change in resources
+        spmu.new_resources += spmu.total_ubi
+        spmu['new_resources_per_person'] = (spmu.new_resources /
+                                                      spmu.numper)
+        # Sort by state
+        if statefip == 'US':
+            target_spmu = spmu.copy(deep=True) 
+        else:
+            target_spmu = spmu[spmu.statefip==statefip].copy(deep=True)
     
-    # Calculate the new taxes from flat tax on AGI
-    tax_rate = agi_tax / 100
-    spmu['new_taxes'] = spmu.adjginc * tax_rate
     
-    spmu.new_resources -= spmu.new_taxes
-    revenue += mdf.weighted_sum(spmu, 'new_taxes', 'spmwt')
-    
-    # Calculate the total UBI a spmu recieves based on exclusions
-    spmu['numper_ubi'] = spmu.numper
-    
-    if ('children' in exclude):
-        spmu['numper_ubi'] -= spmu.child
-    
-    if ('non_citizens' in exclude):
-        spmu['numper_ubi'] -= spmu.non_citizen
-    
-    if ('children' in exclude) and ('non_citizens' in exclude):
-        spmu['numper_ubi'] += spmu.non_citizen_child
-    
-    # Assign UBI
-    ubi_population = (spmu.numper_ubi * spmu.spmwt).sum()
-    ubi = revenue / ubi_population
-    spmu['total_ubi'] = ubi * spmu.numper_ubi
+    if level == 'state':
         
-    # Calculate change in resources
-    spmu.new_resources += spmu.total_ubi
-    spmu['new_resources_per_person'] = (spmu.new_resources /
-                                                  spmu.numper)
-    # Sort by state
-    if statefip == 'US':
-        target_spmu = spmu.copy(deep=True) 
-    else:
-        target_spmu = spmu[spmu.statefip==statefip].copy(deep=True)
+        # Sort by state
+        if statefip == 'US':
+            target_spmu = spmu.copy(deep=True) 
+        else:
+            target_spmu = spmu[spmu.statefip==statefip].copy(deep=True)
+        
+        # Initialize
+        target_spmu['new_resources'] = target_spmu.spmtotres
+        revenue = 0
+        
+        # Change income tax repeal to state level
+        if 'fedtaxac' in taxes:
+            target_spmu.new_resources -= target_spmu.stataxac
+            revenue += mdf.weighted_sum(target_spmu,'stataxac', 'spmwt')
+            
+        # Calculate change in tax revenue
+        tax_rate = agi_tax / 100
+        target_spmu['new_taxes'] = target_spmu.adjginc * tax_rate
+
+        target_spmu.new_resources -= target_spmu.new_taxes
+        revenue += mdf.weighted_sum(target_spmu, 'new_taxes', 'spmwt')
+        
+        # Calculate the total UBI a spmu recieves based on exclusions
+        target_spmu['numper_ubi'] = target_spmu.numper
+
+        if ('children' in exclude):
+            target_spmu['numper_ubi'] -= target_spmu.child
+
+        if ('non_citizens' in exclude):
+            target_spmu['numper_ubi'] -= target_spmu.non_citizen
+
+        if ('children' in exclude) and ('non_citizens' in exclude):
+            target_spmu['numper_ubi'] += target_spmu.non_citizen_child
+
+        if ('adults' in exclude):
+            target_spmu['numper_ubi'] -= target_spmu.adult
+
+        if ('adults' in exclude) and ('non_citizens' in exclude):
+            target_spmu['numper_ubi'] += target_spmu.non_citizen_adult
+
+        # Assign UBI
+        ubi_population = (target_spmu.numper_ubi * target_spmu.spmwt).sum()
+        ubi = revenue / ubi_population
+        target_spmu['total_ubi'] = ubi * target_spmu.numper_ubi
+
+        # Calculate change in resources
+        target_spmu.new_resources += target_spmu.total_ubi
+        target_spmu['new_resources_per_person'] = (target_spmu.new_resources /
+                                                      target_spmu.numper)
+
     
     # Merge and create target_persons
     sub_spmu = target_spmu[['spmfamunit', 'year', 'new_resources', 'new_resources_per_person']]
@@ -406,7 +500,6 @@ def ubi(statefip, agi_tax, benefits, taxes, exclude):
     # Caluclate original gini
     target_persons['spm_resources_per_person'] = target_persons.spmtotres / target_persons.numper
     original_gini = (mdf.gini(target_persons, 'spm_resources_per_person' , 'asecwt'))
-
     
     # Calculate poverty gap
     target_spmu['new_poverty_gap'] = np.where(target_spmu.new_resources < target_spmu.spmthresh, 
@@ -599,6 +692,70 @@ def ubi(statefip, agi_tax, benefits, taxes, exclude):
     fig2.update_yaxes(title_font=dict(size=14, family='Roboto', color='black'))
     
     return ubi_line, winners_line, resources_line, fig, fig2
+
+@app.callback(
+    Output("exclude-checklist", "options"), Input("exclude-checklist", "value"),
+)
+def update(checklist):
+    
+    if "adults" in checklist:
+        return [
+            {"label": "non-Citizens", "value": "non_citizens"},
+            {"label": "Children", "value": "children", "disabled": True},
+            {"label": "Adults", "value": "adults"},
+        ]
+    elif "children" in checklist:
+        return [
+            {"label": "non-Citizens", "value": "non_citizens"},
+            {"label": "Children", "value": "children"},
+            {"label": "Adults", "value": "adults", "disabled":True},
+        ]
+    else:
+        return [
+            {"label": "non-Citizens", "value": "non_citizens"},
+            {"label": "Children", "value": "children"},
+            {"label": "Adults", "value": "adults"},
+        ]
+
+@app.callback(
+    Output("benefits-checklist", "options"), Input("level", "value"),
+)
+def update(radio):
+
+    if "state" in radio:
+        return [
+                {'label': '  Child Tax Credit', 'value': 'ctc', "disabled":True},
+                {'label': '  Supplemental Security Income (SSI)', 'value': 'incssi', "disabled":True},
+                {'label': '  Snap (food stamps)', 'value': 'spmsnap', "disabled":True},
+                {'label': '  Earned Income Tax Credit', 'value': 'eitcred', "disabled":True},
+                {'label': '  Unemployment', 'value': 'incunemp', "disabled":True},
+                {'label': '  Energy Subsidy (LIHEAP)', 'value': 'spmheat', "disabled":True}
+        ]
+    else:
+        return [
+                {'label': '  Child Tax Credit', 'value': 'ctc'},
+                {'label': '  Supplemental Security Income (SSI)', 'value': 'incssi'},
+                {'label': '  Snap (food stamps)', 'value': 'spmsnap'},
+                {'label': '  Earned Income Tax Credit', 'value': 'eitcred'},
+                {'label': '  Unemployment', 'value': 'incunemp'},
+                {'label': '  Energy Subsidy (LIHEAP)', 'value': 'spmheat'}
+        ]
+    
+@app.callback(
+    Output("taxes-checklist", "options"), Input("level", "value"),
+)
+def update(radio):
+
+    if "state" in radio:
+        return [
+                {'label': 'Income taxes', 'value': 'fedtaxac'},
+                {'label': 'Employee side payroll', 'value': 'fica', "disabled":True},
+        ]
+    else:
+        return [
+                {'label': 'Income taxes', 'value': 'fedtaxac'},
+                {'label': 'Employee side payroll', 'value': 'fica'},
+        ]
 
 if __name__ == '__main__':
     app.run_server(debug=True, port=8000, host='127.0.0.1')
