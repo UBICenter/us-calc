@@ -96,8 +96,9 @@ spmu.spmwt /= 3
 # Colors
 BLUE = '#1976D2'
 
-states = person.statefip.unique().tolist()
-states.insert(0, "US")
+states_no_us = person.statefip.unique().tolist()
+states_no_us.sort()
+states = ['US'] + states_no_us
 
 def change(new, old):
     return ((new - old) / old * 100).round(2)
@@ -115,7 +116,7 @@ cards = dbc.CardDeck(
                                                             'fontSize':20}),
                 dcc.Dropdown(id='state-dropdown', multi=False, value='US',
                          options=[{'label':x, 'value':x}
-                                  for x in sorted(states)],
+                                  for x in states],
                          ),
                 html.Br(),
                 html.Label(['Reform level:'],style={'font-weight': 'bold',
@@ -274,6 +275,7 @@ text = dbc.Card([
     outline=False,
 ),
 
+
 app = dash.Dash(__name__,
                 external_stylesheets=[dbc.themes.FLATLY])
 
@@ -365,7 +367,7 @@ def ubi(statefip, level, agi_tax, benefits, taxes, exclude):
 
         # Calculate the new taxes from flat tax on AGI
         tax_rate = agi_tax / 100
-        spmu['new_taxes'] = spmu.adjginc * tax_rate
+        spmu['new_taxes'] = np.maximum(spmu.adjginc, 0) * tax_rate
 
         spmu.new_resources -= spmu.new_taxes
         revenue += mdf.weighted_sum(spmu, 'new_taxes', 'spmwt')
@@ -756,6 +758,7 @@ def update(radio):
                 {'label': 'Income taxes', 'value': 'fedtaxac'},
                 {'label': 'Employee side payroll', 'value': 'fica'},
         ]
+
 
 if __name__ == '__main__':
     app.run_server(debug=True, port=8000, host='127.0.0.1')
