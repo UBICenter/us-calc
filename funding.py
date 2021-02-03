@@ -288,7 +288,7 @@ text = dbc.Card([
 
 
 app = dash.Dash(__name__,
-                external_stylesheets=[dbc.themes.FLATLY])
+                external_stylesheets=[dbc.themes.FLATLY, '/assets/style.css'])
 
 server = app.server
 
@@ -304,8 +304,8 @@ app.layout = html.Div([
     html.Br(),
     dbc.Row(
         [
-            dbc.Col(html.H1("Explore funding mechanisms of UBI",
-                            style={'text-align': 'center', 'color': '#1976D2', 'fontSize': 50}),
+            dbc.Col(html.H1("Explore funding mechanisms of UBI", id="header",
+                            style={'text-align': 'center', 'color': '#1976D2', 'fontSize': 50, 'letter-spacing': '2px'}),
                     width={'size': 8, 'offset': 2},
                     ),
         ]),

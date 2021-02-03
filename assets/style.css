@@ -1,0 +1,14 @@
+/* @font-face {
+    font-family: "Lato";
+    src: url("/assets/fonts/Lato-Light.ttf") format("truetype");
+}
+ */
+#header {
+    font-family: 'Lato', sans-serif;
+    font-weight: 80;
+    font-color: rgba(2,121,182,1)
+}
+
+body {
+    font-family: 'Lato', sans-serif;
+}
