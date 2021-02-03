@@ -307,7 +307,7 @@ app.layout = html.Div([
     dbc.Row(
         [
             dbc.Col(html.H1("Explore funding mechanisms of UBI", id="header",
-                            style={'text-align': 'center', 'color': '#1976D2', 'fontSize': 50, 'letter-spacing': '4px', 'font-weight': 300}),
+                            style={'text-align': 'center', 'color': '#1976D2', 'fontSize': 50, 'letter-spacing': '2px', 'font-weight': 300}),
                     width={'size': 8, 'offset': 2},
                     ),
         ]),
