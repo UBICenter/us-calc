@@ -10,8 +10,7 @@ import dash_bootstrap_components as dbc
 import microdf as mdf
 
 # Import data from Ipums
-person_raw = pd.read_csv(
-    'https://github.com/UBICenter/us-calc/raw/main/cps_00041.csv.gz')
+person_raw = pd.read_csv('cps_00041.csv.gz')
 
 # Create copy and lower column names
 person = person_raw.copy(deep=True)
