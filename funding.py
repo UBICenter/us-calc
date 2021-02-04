@@ -288,12 +288,28 @@ text = dbc.Card([
 
 
 app = dash.Dash(__name__,
-                external_stylesheets=[dbc.themes.FLATLY])
+                external_stylesheets=[dbc.themes.FLATLY, 
+                'https://fonts.googleapis.com/css2?family=Lato:wght@300;400&display=swap',
+                '/assets/style.css'])
 
 server = app.server
 
 # Design the app
 app.layout = html.Div([
+    #navbar
+    dbc.Navbar([
+        html.A(
+            dbc.Row(
+                [
+                    dbc.Col(html.Img(src="https://blog.ubicenter.org/_static/ubi_center_logo_wide_blue.png", height="30px")),
+                ],
+                align="center",
+                no_gutters=True,
+                    ), 
+                    href="https://www.ubicenter.org/home",
+                ),
+        dbc.NavbarToggler(id="navbar-toggler"),
+        ]),
     # Row 1 - header
     dbc.Row(
         [
@@ -304,8 +320,8 @@ app.layout = html.Div([
     html.Br(),
     dbc.Row(
         [
-            dbc.Col(html.H1("Explore funding mechanisms of UBI",
-                            style={'text-align': 'center', 'color': '#1976D2', 'fontSize': 50}),
+            dbc.Col(html.H1("Explore funding mechanisms of UBI", id="header",
+                            style={'text-align': 'center', 'color': '#1976D2', 'fontSize': 50, 'letter-spacing': '2px', 'font-weight': 300}),
                     width={'size': 8, 'offset': 2},
                     ),
         ]),
