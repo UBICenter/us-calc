@@ -296,6 +296,20 @@ server = app.server
 
 # Design the app
 app.layout = html.Div([
+    #navbar
+    dbc.Navbar([
+        html.A(
+            dbc.Row(
+                [
+                    dbc.Col(html.Img(src="https://blog.ubicenter.org/_static/ubi_center_logo_wide_blue.png", height="30px")),
+                ],
+                align="center",
+                no_gutters=True,
+                    ), 
+                    href="https://www.ubicenter.org/home",
+                ),
+        dbc.NavbarToggler(id="navbar-toggler"),
+        ]),
     # Row 1 - header
     dbc.Row(
         [
