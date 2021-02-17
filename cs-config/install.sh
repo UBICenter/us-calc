@@ -1,1 +1,1 @@
-conda update env --name base -f environment.yml
+csk build-env
