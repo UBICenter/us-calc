@@ -434,6 +434,8 @@ text = (
     ),
 )
 
+# Get base pathname from an environment variable that CS will provide.
+url_base_pathname = os.environ.get("URL_BASE_PATHNAME", "/")
 
 app = dash.Dash(
     __name__,
@@ -441,6 +443,7 @@ app = dash.Dash(
         dbc.themes.FLATLY,
         "https://fonts.googleapis.com/css2?family=Lato:wght@300;400&display=swap",
         "/assets/style.css",
+        url_base_pathname=url_base_pathname, # Pass the url base pathname to Dash
     ],
 )
 
