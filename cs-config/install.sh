@@ -1,2 +1,1 @@
-conda env create -f environment.yml
-conda activate calc
+conda update env --name base -f environment.yml
