@@ -8,6 +8,7 @@ import dash_html_components as html
 from dash.dependencies import Input, Output
 import dash_bootstrap_components as dbc
 import microdf as mdf
+import os
 
 # Import data from Ipums
 person_raw = pd.read_csv("cps_00041.csv.gz")
@@ -434,6 +435,8 @@ text = (
     ),
 )
 
+# Get base pathname from an environment variable that CS will provide.
+url_base_pathname = os.environ.get("URL_BASE_PATHNAME", "/")
 
 app = dash.Dash(
     __name__,
@@ -441,6 +444,8 @@ app = dash.Dash(
         dbc.themes.FLATLY,
         "https://fonts.googleapis.com/css2?family=Lato:wght@300;400&display=swap",
         "/assets/style.css",
+        # Pass the url base pathname to Dash.
+        url_base_pathname=url_base_pathname,
     ],
 )
 
