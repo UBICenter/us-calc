@@ -470,13 +470,12 @@ app.layout = html.Div(
                         align="center",
                         no_gutters=True,
                     ),
-                    href="https://www.ubicenter.org/home",
+                    href="https://www.ubicenter.org", target="blank"
                 ),
                 dbc.NavbarToggler(id="navbar-toggler"),
             ]
         ),
         # Row 1 - header
-        
         html.Br(),
         dbc.Row(
             [
