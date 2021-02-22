@@ -476,22 +476,7 @@ app.layout = html.Div(
             ]
         ),
         # Row 1 - header
-        dbc.Row(
-            [
-                dbc.Col(
-                    html.A(
-                        [
-                            html.Img(
-                                src="https://blog.ubicenter.org/_static/ubi_center_logo_wide_blue.png",
-                                style={"height": "60%", "width": "60%"},
-                            )
-                        ],
-                        href="https://www.ubicenter.org/",
-                    ),
-                    width=2,
-                )
-            ]
-        ),
+        
         html.Br(),
         dbc.Row(
             [
