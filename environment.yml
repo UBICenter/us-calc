@@ -11,4 +11,4 @@ dependencies:
 - pip
 - pip:
   - jupyter-book
-  - "git+https://github.com/PSLmodels/microdf.git"
+  - "git+https://github.com/PSLmodels/microdf"
