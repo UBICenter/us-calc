@@ -862,15 +862,13 @@ def ubi(statefip, level, agi_tax, benefits, taxes, exclude):
     gini_string = str(round(gini, 3))
 
     # Convert UBI and winners to string for title of chart
-    ubi_int = int(ubi)
-    ubi_int = "{:,}".format(ubi_int)
-    ubi_string = str(ubi_int)
+    ubi_string = str("{:,}".format(int(round(ubi / 12))))
     winners_string = str(percent_winners)
     change_pp = int(change_pp)
     change_pp = "{:,}".format(change_pp)
     resources_string = str(change_pp)
 
-    ubi_line = "UBI amount: $" + ubi_string
+    ubi_line = "Monthly UBI: $" + ubi_string
     winners_line = "Percent better off: " + winners_string + "%"
     resources_line = (
         "Average change in resources per person: $" + resources_string
