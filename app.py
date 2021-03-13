@@ -247,7 +247,7 @@ cards = dbc.CardDeck(
                         ),
                         html.Br(),
                         html.Label(
-                            ["Add flat tax on AGI:"],
+                            ["Income tax rate"],
                             style={
                                 "font-weight": "bold",
                                 "text-align": "center",
