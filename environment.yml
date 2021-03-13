@@ -1,7 +1,10 @@
 name: calc
+channels:
+- conda-forge
 dependencies:
 - python
 - dash
+- dash-bootstrap-components
 - plotly
 - pandas
 - numpy
