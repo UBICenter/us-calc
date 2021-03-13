@@ -470,7 +470,8 @@ app.layout = html.Div(
                         align="center",
                         no_gutters=True,
                     ),
-                    href="https://www.ubicenter.org", target="blank"
+                    href="https://www.ubicenter.org",
+                    target="blank",
                 ),
                 dbc.NavbarToggler(id="navbar-toggler"),
             ]
@@ -1075,7 +1076,11 @@ def update(radio):
                 "value": "eitcred",
                 "disabled": True,
             },
-            {"label": "  Unemployment benefits", "value": "incunemp", "disabled": True},
+            {
+                "label": "  Unemployment benefits",
+                "value": "incunemp",
+                "disabled": True,
+            },
             {
                 "label": "  Energy subsidy (LIHEAP)",
                 "value": "spmheat",
