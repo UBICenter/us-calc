@@ -9,6 +9,7 @@ from dash.dependencies import Input, Output
 import dash_bootstrap_components as dbc
 import microdf as mdf
 import os
+import us
 
 # Import data from Ipums
 person_raw = pd.read_csv("cps_00041.csv.gz")

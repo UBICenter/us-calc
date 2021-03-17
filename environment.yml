@@ -6,6 +6,7 @@ dependencies:
 - pandas
 - numpy
 - pip
+- us
 - pip:
   - jupyter-book
   - "git+https://github.com/PSLmodels/microdf.git"
