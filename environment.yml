@@ -6,7 +6,7 @@ dependencies:
 - dash
 - dash-bootstrap-components
 - plotly
-- pandas
+- "pandas>=1.2.3"
 - numpy
 - pip
 - pip:
