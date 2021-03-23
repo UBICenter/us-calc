@@ -1,14 +1,14 @@
 name: calc
 channels:
-- conda-forge
+  - conda-forge
 dependencies:
-- python
-- dash
-- dash-bootstrap-components
-- plotly
-- pandas
-- numpy
-- pip
-- pip:
-  - jupyter-book
-  - "git+https://github.com/PSLmodels/microdf"
+  - python
+  - dash
+  - dash-bootstrap-components
+  - plotly
+  - "pandas>=1.2.3"
+  - numpy
+  - pip
+  - pip:
+      - jupyter-book
+      - "git+https://github.com/PSLmodels/microdf"
