@@ -110,3 +110,7 @@ spmu[["fica", "fedtaxac", "stataxac"]] *= -1
 spmu.rename(columns={"person": "numper"}, inplace=True)
 
 spmu.spmwt /= 3
+
+# write pre-processed dfs to csv files
+person.to_csv("person.csv.gz", compression="gzip")
+spmu.to_csv("spmu.csv.gz", compression="gzip")
