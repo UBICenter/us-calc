@@ -32,18 +32,22 @@ person["non_citizen_child"] = (person.citizen == 5) & (person.age < 18)
 person["non_citizen_adult"] = (person.citizen == 5) & (person.age > 17)
 
 # Remove NIUs
-person["taxinc"].replace({9999999: 0}, inplace=True)
-person["adjginc"].replace({99999999: 0}, inplace=True)
-person["incss"].replace({999999: 0}, inplace=True)
-person["incssi"].replace({999999: 0}, inplace=True)
-person["incunemp"].replace({99999: 0}, inplace=True)
-person["incunemp"].replace({999999: 0}, inplace=True)
-person["ctccrd"].replace({999999: 0}, inplace=True)
-person["actccrd"].replace({99999: 0}, inplace=True)
-person["eitcred"].replace({9999: 0}, inplace=True)
-person["fica"].replace({99999: 0}, inplace=True)
-person["fedtaxac"].replace({99999999: 0}, inplace=True)
-person["stataxac"].replace({9999999: 0}, inplace=True)
+person["eitcred"].replace({9999: 0}, inplace=True) # 4 dig
+
+person["incunemp"].replace({99999: 0}, inplace=True) # 5 dig
+person["fica"].replace({99999: 0}, inplace=True) # 5 dig
+person["actccrd"].replace({99999: 0}, inplace=True) # 5 dig
+
+person["incssi"].replace({999999: 0}, inplace=True) # 6 dig
+person["incss"].replace({999999: 0}, inplace=True) # 6 dig
+person["incunemp"].replace({999999: 0}, inplace=True) # 6 dig
+person["ctccrd"].replace({999999: 0}, inplace=True) # 6 dig
+
+person["taxinc"].replace({9999999: 0}, inplace=True) # 7 dig
+person["stataxac"].replace({9999999: 0}, inplace=True)   # 7 dig
+
+person["fedtaxac"].replace({99999999: 0}, inplace=True)  # 8 dig
+person["adjginc"].replace({99999999: 0}, inplace=True) # 8 dig
 
 # Change fip codes to state names
 person["statefip"] = person["statefip"].astype(str)
@@ -575,6 +579,24 @@ app.layout = html.Div(
     Input(component_id="exclude-checklist", component_property="value"),
 )
 def ubi(statefip, level, agi_tax, benefits, taxes, exclude):
+    """ this does everything from miscrosimulation to figure creation.
+        Dash does something automatically where it takes the input arguments
+        in the order given in the @app.callback decorator
+    Args:
+        statefip:  takes input from callback input, component_id="state-dropdown"
+        level:  component_id="level"
+        agi_tax:  component_id="agi-slider"
+        benefits:  component_id="benefits-checklist"
+        taxes:  component_id="taxes-checklist"
+        exclude: component_id="exclude-checklist"
+
+    Returns:
+        ubi_line: outputs to  "ubi-output" in @app.callback
+        winners_line: outputs to "winners-output" in @app.callback
+        resources_line: outputs to "resources-output" in @app.callback
+        fig: outputs to "my-graph" in @app.callback
+        fig2: outputs to "my-graph2" in @app.callback
+    """
 
     if level == "federal":
         # combine lists and initialize
