@@ -52,7 +52,7 @@ person["stataxac"].replace({9999999: 0}, inplace=True)
 # Change fip codes to state names
 person["statefip"]=person["statefip"].astype(str)
 person["statefip"]=person["statefip"].apply(lambda x: us.states.lookup(x))
-person["statefip"]=person["statefip"].astype('str')
+person["statefip"]=person["statefip"].astype(str)
 
 # Aggregate deductible and refundable child tax credits
 person["ctc"] = person.ctccrd + person.actccrd
