@@ -23,7 +23,7 @@ person = person_raw.copy(deep=True)
 person.columns = person.columns.str.lower()
 person.asecwt /= 3
 
-# Crate booleans for demographics
+# Create booleans for demographics
 person["adult"] = person.age > 17
 person["child"] = person.age < 18
 
