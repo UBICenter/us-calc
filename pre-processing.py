@@ -24,7 +24,7 @@ person.columns = person.columns.str.lower()
 person.asecwt /= 3
 
 # Create booleans for demographics
-person["adult"] = person.age > 17
+person["adult"] = person.age >= 18
 person["child"] = person.age < 18
 
 person["black"] = person.race == 200
