@@ -33,7 +33,7 @@ person["hispanic"] = (person.hispan > 1) & person.hispan < 700
 person["pwd"] = person.diffany == 2
 person["non_citizen"] = person.citizen == 5
 person["non_citizen_child"] = (person.citizen == 5) & person.child
-person["non_citizen_adult"] = (person.citizen == 5) & (person.age > 17)
+person["non_citizen_adult"] = (person.citizen == 5) & person.adult
 
 # Remove NIUs
 person["taxinc"].replace({9999999: 0}, inplace=True)
