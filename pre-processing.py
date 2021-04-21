@@ -23,8 +23,8 @@ person = pd.read_csv("cps_00041.csv.gz")
 person.columns = person.columns.str.lower()
 person.asecwt /= 3
 
-# Crate booleans for demographics
-person["adult"] = person.age > 17
+# Create booleans for demographics
+person["adult"] = person.age >= 18
 person["child"] = person.age < 18
 
 person["black"] = person.race == 200
@@ -32,8 +32,8 @@ person["white_non_hispanic"] = (person.race == 100) & (person.hispan == 0)
 person["hispanic"] = (person.hispan > 1) & person.hispan < 700
 person["pwd"] = person.diffany == 2
 person["non_citizen"] = person.citizen == 5
-person["non_citizen_child"] = (person.citizen == 5) & (person.age < 18)
-person["non_citizen_adult"] = (person.citizen == 5) & (person.age > 17)
+person["non_citizen_child"] = (person.citizen == 5) & person.child
+person["non_citizen_adult"] = (person.citizen == 5) & person.adult
 
 # Remove NIUs
 person["taxinc"].replace({9999999: 0}, inplace=True)
@@ -52,7 +52,7 @@ person["stataxac"].replace({9999999: 0}, inplace=True)
 # Change fip codes to state names
 person["statefip"]=person["statefip"].astype(str)
 person["statefip"]=person["statefip"].apply(lambda x: us.states.lookup(x))
-person["statefip"]=person["statefip"].astype('str')
+person["statefip"]=person["statefip"].astype(str)
 
 # Aggregate deductible and refundable child tax credits
 person["ctc"] = person.ctccrd + person.actccrd
