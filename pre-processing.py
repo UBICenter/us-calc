@@ -16,10 +16,10 @@ import os
 import us
 
 # Import data from Ipums
-person_raw = pd.read_csv("cps_00041.csv.gz")
+person = pd.read_csv("cps_00041.csv.gz")
 
 # Create copy and lower column names
-person = person_raw.copy(deep=True)
+
 person.columns = person.columns.str.lower()
 person.asecwt /= 3
 
