@@ -17,11 +17,10 @@ import us
 
 # Import data from Ipums
 person = pd.read_csv("cps_00041.csv.gz")
-
-# Create copy and lower column names
-
+# lower column names
 person.columns = person.columns.str.lower()
-person.asecwt /= 3
+# Divide by three for three years of data.
+person[["asecwt", "spmwt"]] /= 3
 
 # Create booleans for demographics
 person["adult"] = person.age >= 18
@@ -108,8 +107,6 @@ SPMU_COLUMNS = [
 spmu = person.groupby(SPMU_COLUMNS, observed=False)[PERSON_COLUMNS].sum().reset_index()
 spmu[["fica", "fedtaxac", "stataxac"]] *= -1
 spmu.rename(columns={"person": "numper"}, inplace=True)
-
-spmu.spmwt /= 3
 
 # write pre-processed dfs to csv files
 person.to_csv("person.csv.gz", compression="gzip")
