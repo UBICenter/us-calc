@@ -18,18 +18,22 @@ spmu = pd.read_csv("spmu.csv.gz")
 # Colors
 BLUE = "#1976D2"
 
+# create a list of all states, including "US" as a state
+# confusingly called statefip, but it is the full name and not the fip code
+# todo: rename in pre-processing.py
 states_no_us = person.statefip.unique().tolist()
 states_no_us.sort()
 states = ["US"] + states_no_us
 
-
+# funcion to calculate % difference between one number and another
 def change(new, old):
     return ((new - old) / old * 100).round(2)
 
 
-# Create the inputs card
+# Create the 4 input cards
 cards = dbc.CardDeck(
     [
+        # define first card with state-dropdown component
         dbc.Card(
             [
                 dbc.CardBody(
@@ -44,9 +48,12 @@ cards = dbc.CardDeck(
                             },
                         ),
                         dcc.Dropdown(
+                            # define component_id for input of app@callback function
                             id="state-dropdown",
                             multi=False,
                             value="US",
+                            # create a list of dicts of states and their labels
+                            # to be selected by user in dropdown
                             options=[{"label": x, "value": x} for x in states],
                         ),
                         html.Br(),
@@ -74,10 +81,19 @@ cards = dbc.CardDeck(
             color="info",
             outline=False,
         ),
+
+        # second card -
+        # tax slider
+        #   allows user to repeal certain federal and state taxes
+        #   component_id: "taxes-checklist"
+        # tax rate slider
+        #   Allows user to adjust tax rate that determines ubi benefit amount
+        #   component_id="agi-slider"
         dbc.Card(
             [
                 dbc.CardBody(
                     [
+                        # define attributes of taxes-checklist component
                         html.Label(
                             ["Repeal current taxes:"],
                             style={
@@ -89,6 +105,7 @@ cards = dbc.CardDeck(
                         ),
                         html.Br(),
                         dcc.Checklist(
+                            # define component id to be used in callback
                             id="taxes-checklist",
                             options=[
                                 {"label": "Income taxes", "value": "fedtaxac"},
@@ -101,6 +118,7 @@ cards = dbc.CardDeck(
                             labelStyle={"display": "block"},
                         ),
                         html.Br(),
+                        # defines label/other HTML attributes of agi-slider component
                         html.Label(
                             ["Income tax rate"],
                             style={
@@ -120,6 +138,7 @@ cards = dbc.CardDeck(
                                 "always_visible": True,
                                 "placement": "bottom",
                             },
+                            # define marker values to show increments on slider
                             marks={
                                 0: {
                                     "label": "0%",
@@ -155,10 +174,12 @@ cards = dbc.CardDeck(
             color="info",
             outline=False,
         ),
+        # define third card where the repeal benefits checklist is displayed
         dbc.Card(
             [
                 dbc.CardBody(
                     [
+                        # label the card
                         html.Label(
                             ["Repeal benefits:"],
                             style={
@@ -168,11 +189,19 @@ cards = dbc.CardDeck(
                                 "fontSize": 20,
                             },
                         ),
+                        # use  dash component to create checklist to choose
+                        # which benefits to repeal
                         dcc.Checklist(
+                             # this id string is a dash component_id
+                             # and is referenced as in input in app.callback
                             id="benefits-checklist",
+                            # 'options' here refers the selections available to the user in the
+                            # checklist
                             options=[
                                 {
+                                    # label what user will see next to check box
                                     "label": "  Child Tax Credit",
+                                    # to be used ________
                                     "value": "ctc",
                                 },
                                 {
@@ -586,7 +615,9 @@ def ubi(statefip, level, agi_tax, benefits, taxes, exclude):
     )
 
     original_poverty_gap = mdf.weighted_sum(
-        target_spmu, "poverty_gap", "spmwt"
+        target_spmu,
+        "poverty_gap",
+        "spmwt"
     )
 
     # Calculate the orginal demographic poverty rates
