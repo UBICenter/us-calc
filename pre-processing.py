@@ -49,9 +49,14 @@ person["fedtaxac"].replace({99999999: 0}, inplace=True)
 person["stataxac"].replace({9999999: 0}, inplace=True)
 
 # Change fip codes to state names
-person["statefip"]=person["statefip"].astype(str)
-person["statefip"]=person["statefip"].apply(lambda x: us.states.lookup(x))
-person["statefip"]=person["statefip"].astype(str)
+person["statefip"] = (
+    person["statefip"]
+    .astype(str)
+    # pad leading zero or wrong number of states
+    .apply("{:0>2}".format)
+    .apply(lambda x: us.states.lookup(x))
+)
+person["statefip"] = person["statefip"].astype(str)
 
 # Aggregate deductible and refundable child tax credits
 person["ctc"] = person.ctccrd + person.actccrd
@@ -70,9 +75,7 @@ state_groups_taxinc = person.groupby(["statefip"])[
     ["weighted_state_tax", "weighted_agi"]
 ].sum()
 state_groups_taxinc.columns = ["state_tax_revenue", "state_taxable_income"]
-person = person.merge(
-    state_groups_taxinc, left_on=["statefip"], right_index=True
-)
+person = person.merge(state_groups_taxinc, left_on=["statefip"], right_index=True)
 
 # Create dataframe with aggregated spm unit data
 PERSON_COLUMNS = [
