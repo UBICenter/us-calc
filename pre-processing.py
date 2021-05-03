@@ -35,18 +35,18 @@ person["non_citizen_child"] = (person.citizen == 5) & person.child
 person["non_citizen_adult"] = (person.citizen == 5) & person.adult
 
 # Remove NIUs
-person["taxinc"].replace({9999999: 0}, inplace=True)
 person["adjginc"].replace({99999999: 0}, inplace=True)
-person["incss"].replace({999999: 0}, inplace=True)
-person["incssi"].replace({999999: 0}, inplace=True)
-person["incunemp"].replace({99999: 0}, inplace=True)
-person["incunemp"].replace({999999: 0}, inplace=True)
-person["ctccrd"].replace({999999: 0}, inplace=True)
-person["actccrd"].replace({99999: 0}, inplace=True)
-person["eitcred"].replace({9999: 0}, inplace=True)
-person["fica"].replace({99999: 0}, inplace=True)
 person["fedtaxac"].replace({99999999: 0}, inplace=True)
+person["taxinc"].replace({9999999: 0}, inplace=True)
 person["stataxac"].replace({9999999: 0}, inplace=True)
+person["incss"].replace({999999: 0}, inplace=True)
+person["incunemp"].replace({999999: 0}, inplace=True)
+person["incssi"].replace({999999: 0}, inplace=True)
+person["ctccrd"].replace({999999: 0}, inplace=True)
+person["incunemp"].replace({99999: 0}, inplace=True)
+person["actccrd"].replace({99999: 0}, inplace=True)
+person["fica"].replace({99999: 0}, inplace=True)
+person["eitcred"].replace({9999: 0}, inplace=True)
 
 # Change fip codes to state names
 person["state"] = (
@@ -55,9 +55,9 @@ person["state"] = (
     .apply("{:0>2}".format)
     # lookup full state name from fips code
     .apply(lambda x: us.states.lookup(x))
+    # change us package formatting to string
+    .astype(str)
 )
-# change us package formatting to string
-person["state"] = person["state"].astype(str)
 # drop original statefip column from dataframe
 person = person.drop(columns=["statefip"])
 

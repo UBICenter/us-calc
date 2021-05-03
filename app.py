@@ -19,9 +19,9 @@ spmu = pd.read_csv("spmu.csv.gz")
 BLUE = "#1976D2"
 
 # create a list of all states, including "US" as a state
-# confusingly called statefip, but it is the full name and not the fip code
+# confusingly called state, but it is the full name and not the fip code
 # todo: rename in pre-processing.py
-states_no_us = person.statefip.unique().tolist()
+states_no_us = person.state.unique().tolist()
 states_no_us.sort()
 states = ["US"] + states_no_us
 
@@ -81,7 +81,6 @@ cards = dbc.CardDeck(
             color="info",
             outline=False,
         ),
-
         # second card -
         # tax slider
         #   allows user to repeal certain federal and state taxes
@@ -192,8 +191,8 @@ cards = dbc.CardDeck(
                         # use  dash component to create checklist to choose
                         # which benefits to repeal
                         dcc.Checklist(
-                             # this id string is a dash component_id
-                             # and is referenced as in input in app.callback
+                            # this id string is a dash component_id
+                            # and is referenced as in input in app.callback
                             id="benefits-checklist",
                             # 'options' here refers the selections available to the user in the
                             # checklist
@@ -273,10 +272,14 @@ cards = dbc.CardDeck(
 charts = dbc.CardDeck(
     [
         dbc.Card(
-            dcc.Graph(id="my-graph", figure={}), body=True, color="info",
+            dcc.Graph(id="my-graph", figure={}),
+            body=True,
+            color="info",
         ),
         dbc.Card(
-            dcc.Graph(id="my-graph2", figure={}), body=True, color="info",
+            dcc.Graph(id="my-graph2", figure={}),
+            body=True,
+            color="info",
         ),
     ]
 )
@@ -441,12 +444,12 @@ app.layout = html.Div(
     Input(component_id="taxes-checklist", component_property="value"),
     Input(component_id="exclude-checklist", component_property="value"),
 )
-def ubi(statefip, level, agi_tax, benefits, taxes, exclude):
-    """ this does everything from miscrosimulation to figure creation.
+def ubi(state, level, agi_tax, benefits, taxes, exclude):
+    """this does everything from miscrosimulation to figure creation.
         Dash does something automatically where it takes the input arguments
         in the order given in the @app.callback decorator
     Args:
-        statefip:  takes input from callback input, component_id="state-dropdown"
+        state:  takes input from callback input, component_id="state-dropdown"
         level:  component_id="level"
         agi_tax:  component_id="agi-slider"
         benefits:  component_id="benefits-checklist"
@@ -462,13 +465,17 @@ def ubi(statefip, level, agi_tax, benefits, taxes, exclude):
     """
 
     if level == "federal":
-        # combine lists and initialize
+        # combine taxes and benefits checklists into one list to be used to
+        #  subset spmu dataframe
         taxes_benefits = taxes + benefits
+        # initialize new resources column with old resources as baseline
         spmu["new_resources"] = spmu.spmtotres
+        # initialize revenue at zero
         revenue = 0
 
         # Calculate the new revenue and spmu resources from tax and benefit change
         for tax_benefit in taxes_benefits:
+            # subract taxes and benefits that have been changed from spmu resoures
             spmu.new_resources -= spmu[tax_benefit]
             revenue += mdf.weighted_sum(spmu, tax_benefit, "spmwt")
 
@@ -483,14 +490,17 @@ def ubi(statefip, level, agi_tax, benefits, taxes, exclude):
         # Calculate the new taxes from flat tax on AGI
         tax_rate = agi_tax / 100
         spmu["new_taxes"] = np.maximum(spmu.adjginc, 0) * tax_rate
-
+        # subtract new taxes from new resources
         spmu.new_resources -= spmu.new_taxes
+        # add new revenue when new taxes are applied on spmus, multiplied by weights
         revenue += mdf.weighted_sum(spmu, "new_taxes", "spmwt")
 
         # Calculate the total UBI a spmu recieves based on exclusions
         spmu["numper_ubi"] = spmu.numper
 
         if "children" in exclude:
+            # subract the number of children from the number of
+            # people in spm unit recieving ubi benfit
             spmu["numper_ubi"] -= spmu.child
 
         if "non_citizens" in exclude:
@@ -514,18 +524,18 @@ def ubi(statefip, level, agi_tax, benefits, taxes, exclude):
         spmu.new_resources += spmu.total_ubi
         spmu["new_resources_per_person"] = spmu.new_resources / spmu.numper
         # Sort by state
-        if statefip == "US":
+        if state == "US":
             target_spmu = spmu.copy(deep=True)
         else:
-            target_spmu = spmu[spmu.statefip == statefip].copy(deep=True)
+            target_spmu = spmu[spmu.state == state].copy(deep=True)
 
     if level == "state":
 
         # Sort by state
-        if statefip == "US":
+        if state == "US":
             target_spmu = spmu.copy(deep=True)
         else:
-            target_spmu = spmu[spmu.statefip == statefip].copy(deep=True)
+            target_spmu = spmu[spmu.state == state].copy(deep=True)
 
         # Initialize
         target_spmu["new_resources"] = target_spmu.spmtotres
@@ -579,48 +589,49 @@ def ubi(statefip, level, agi_tax, benefits, taxes, exclude):
     target_persons = person.merge(sub_spmu, on=["spmfamunit", "year"])
 
     # Calculate populations
+    # TODO preprocess all these, filter based on state
     population = target_persons.asecwt.sum()
+    # TODO preprocess
     child_population = (target_persons.child * target_persons.asecwt).sum()
-    non_citizen_population = (
-        target_persons.non_citizen * target_persons.asecwt
-    ).sum()
+    # TODO preprocess
+    non_citizen_population = (target_persons.non_citizen * target_persons.asecwt).sum()
+    # TODO preprocess
     non_citizen_child_population = (
         target_persons.non_citizen_child * target_persons.asecwt
     ).sum()
 
     # Calculate total change in resources
-    original_total_resources = (
-        target_spmu.spmtotres * target_spmu.spmwt
-    ).sum()
+    # TODO preprocess
+    original_total_resources = (target_spmu.spmtotres * target_spmu.spmwt).sum()
+    # DO NOT PREPROCESS, new_resources
     new_total_resources = (target_spmu.new_resources * target_spmu.spmwt).sum()
     change_total_resources = new_total_resources - original_total_resources
     change_pp = change_total_resources / population
 
     # Determine people originally in poverty
+    # TODO preprocess
     target_persons["original_poor"] = (
         target_persons.spmtotres < target_persons.spmthresh
     )
 
     # Calculate original poverty rate
-    original_total_poor = (
-        target_persons.original_poor * target_persons.asecwt
-    ).sum()
+    # TODO preprocess
+    original_total_poor = (target_persons.original_poor * target_persons.asecwt).sum()
+    # TODO preprocess
     original_poverty_rate = (original_total_poor / population) * 100
 
     # Calculate the original poverty gap
+    # TODO preprocess
     target_spmu["poverty_gap"] = np.where(
         target_spmu.spmtotres < target_spmu.spmthresh,
         target_spmu.spmthresh - target_spmu.spmtotres,
         0,
     )
-
-    original_poverty_gap = mdf.weighted_sum(
-        target_spmu,
-        "poverty_gap",
-        "spmwt"
-    )
+    # TODO preprocess
+    original_poverty_gap = mdf.weighted_sum(target_spmu, "poverty_gap", "spmwt")
 
     # Calculate the orginal demographic poverty rates
+    # TODO use this function
     def pov_rate(column):
         return (
             mdf.weighted_mean(
@@ -631,20 +642,25 @@ def ubi(statefip, level, agi_tax, benefits, taxes, exclude):
             * 100
         )
 
+    # TODO preprocess
     original_child_poverty_rate = pov_rate("child")
+    # TODO preprocess
     original_adult_poverty_rate = pov_rate("adult")
+    # TODO preprocess
     original_pwd_poverty_rate = pov_rate("pwd")
+    # TODO preprocess
     original_white_poverty_rate = pov_rate("white_non_hispanic")
+    # TODO preprocess
     original_black_poverty_rate = pov_rate("black")
+    # TODO preprocess
     original_hispanic_poverty_rate = pov_rate("hispanic")
 
     # Caluclate original gini
     target_persons["spm_resources_per_person"] = (
         target_persons.spmtotres / target_persons.numper
     )
-    original_gini = mdf.gini(
-        target_persons, "spm_resources_per_person", "asecwt"
-    )
+    # TODO preprocess
+    original_gini = mdf.gini(target_persons, "spm_resources_per_person", "asecwt")
 
     # Calculate poverty gap
     target_spmu["new_poverty_gap"] = np.where(
@@ -658,9 +674,7 @@ def ubi(statefip, level, agi_tax, benefits, taxes, exclude):
     ).round(1)
 
     # Calculate the change in poverty rate
-    target_persons["poor"] = (
-        target_persons.new_resources < target_persons.spmthresh
-    )
+    target_persons["poor"] = target_persons.new_resources < target_persons.spmthresh
     total_poor = (target_persons.poor * target_persons.asecwt).sum()
     poverty_rate = (total_poor / population) * 100
     poverty_rate_change = (
@@ -672,18 +686,15 @@ def ubi(statefip, level, agi_tax, benefits, taxes, exclude):
     gini_change = ((gini - original_gini) / original_gini * 100).round(1)
 
     # Calculate percent winners
-    target_persons["winner"] = (
-        target_persons.new_resources > target_persons.spmtotres
-    )
+    target_persons["winner"] = target_persons.new_resources > target_persons.spmtotres
     total_winners = (target_persons.winner * target_persons.asecwt).sum()
     percent_winners = (total_winners / population * 100).round(1)
 
     # Calculate the new poverty rate for each demographic
+    # TODO I think this is redundant, see pov_rate()
     def pv_rate(column):
         return (
-            mdf.weighted_mean(
-                target_persons[target_persons[column]], "poor", "asecwt"
-            )
+            mdf.weighted_mean(target_persons[target_persons[column]], "poor", "asecwt")
             * 100
         )
 
@@ -706,9 +717,7 @@ def ubi(statefip, level, agi_tax, benefits, taxes, exclude):
         * 100
     ).round(1)
     pwd_poverty_rate_change = (
-        (pwd_poverty_rate - original_pwd_poverty_rate)
-        / original_pwd_poverty_rate
-        * 100
+        (pwd_poverty_rate - original_pwd_poverty_rate) / original_pwd_poverty_rate * 100
     ).round(1)
     white_poverty_rate_change = (
         (white_poverty_rate - original_white_poverty_rate)
@@ -729,23 +738,15 @@ def ubi(statefip, level, agi_tax, benefits, taxes, exclude):
     # Round all numbers for display in hover
     original_poverty_rate_string = str(round(original_poverty_rate, 1))
     poverty_rate_string = str(round(poverty_rate, 1))
-    original_child_poverty_rate_string = str(
-        round(original_child_poverty_rate, 1)
-    )
+    original_child_poverty_rate_string = str(round(original_child_poverty_rate, 1))
     child_poverty_rate_string = str(round(child_poverty_rate, 1))
-    original_adult_poverty_rate_string = str(
-        round(original_adult_poverty_rate, 1)
-    )
+    original_adult_poverty_rate_string = str(round(original_adult_poverty_rate, 1))
     adult_poverty_rate_string = str(round(adult_poverty_rate, 1))
     original_pwd_poverty_rate_string = str(round(original_pwd_poverty_rate, 1))
     pwd_poverty_rate_string = str(round(pwd_poverty_rate, 1))
-    original_white_poverty_rate_string = str(
-        round(original_white_poverty_rate, 1)
-    )
+    original_white_poverty_rate_string = str(round(original_white_poverty_rate, 1))
     white_poverty_rate_string = str(round(white_poverty_rate, 1))
-    original_black_poverty_rate_string = str(
-        round(original_black_poverty_rate, 1)
-    )
+    original_black_poverty_rate_string = str(round(original_black_poverty_rate, 1))
     black_poverty_rate_string = str(round(black_poverty_rate, 1))
     original_hispanic_poverty_rate_string = str(
         round(original_hispanic_poverty_rate, 1)
@@ -754,9 +755,7 @@ def ubi(statefip, level, agi_tax, benefits, taxes, exclude):
 
     original_poverty_gap_billions = original_poverty_gap / 1e9
     original_poverty_gap_billions = int(original_poverty_gap_billions)
-    original_poverty_gap_billions = "{:,}".format(
-        original_poverty_gap_billions
-    )
+    original_poverty_gap_billions = "{:,}".format(original_poverty_gap_billions)
 
     poverty_gap_billions = poverty_gap / 1e9
     poverty_gap_billions = int(poverty_gap_billions)
@@ -774,9 +773,7 @@ def ubi(statefip, level, agi_tax, benefits, taxes, exclude):
 
     ubi_line = "Monthly UBI: $" + ubi_string
     winners_line = "Percent better off: " + winners_string + "%"
-    resources_line = (
-        "Average change in resources per person: $" + resources_string
-    )
+    resources_line = "Average change in resources per person: $" + resources_string
 
     # Create x-axis labels for each chart
     x = ["Poverty rate", "Poverty gap", "Gini index"]
@@ -864,15 +861,11 @@ def ubi(statefip, level, agi_tax, benefits, taxes, exclude):
                     "Original child poverty rate: "
                     + original_child_poverty_rate_string
                     + "%<br><extra></extra>"
-                    "New child poverty rate: "
-                    + child_poverty_rate_string
-                    + "%",
+                    "New child poverty rate: " + child_poverty_rate_string + "%",
                     "Original adult poverty rate: "
                     + original_adult_poverty_rate_string
                     + "%<br><extra></extra>"
-                    "New adult poverty rate: "
-                    + adult_poverty_rate_string
-                    + "%",
+                    "New adult poverty rate: " + adult_poverty_rate_string + "%",
                     "Original pwd poverty rate: "
                     + original_pwd_poverty_rate_string
                     + "%<br><extra></extra>"
@@ -880,21 +873,15 @@ def ubi(statefip, level, agi_tax, benefits, taxes, exclude):
                     "Original White poverty rate: "
                     + original_white_poverty_rate_string
                     + "%<br><extra></extra>"
-                    "New White poverty rate: "
-                    + white_poverty_rate_string
-                    + "%",
+                    "New White poverty rate: " + white_poverty_rate_string + "%",
                     "Original Black poverty rate: "
                     + original_black_poverty_rate_string
                     + "%<br><extra></extra>"
-                    "New Black poverty rate: "
-                    + black_poverty_rate_string
-                    + "%",
+                    "New Black poverty rate: " + black_poverty_rate_string + "%",
                     "Original Hispanic poverty rate: "
                     + original_hispanic_poverty_rate_string
                     + "%<br><extra></extra>"
-                    "New Hispanic poverty rate: "
-                    + hispanic_poverty_rate_string
-                    + "%",
+                    "New Hispanic poverty rate: " + hispanic_poverty_rate_string + "%",
                 ],
                 marker_color=BLUE,
             )
@@ -956,7 +943,8 @@ def update(checklist):
 
 
 @app.callback(
-    Output("benefits-checklist", "options"), Input("level", "value"),
+    Output("benefits-checklist", "options"),
+    Input("level", "value"),
 )
 def update(radio):
 
@@ -1004,7 +992,8 @@ def update(radio):
 
 
 @app.callback(
-    Output("taxes-checklist", "options"), Input("level", "value"),
+    Output("taxes-checklist", "options"),
+    Input("level", "value"),
 )
 def update(radio):
 
@@ -1026,4 +1015,3 @@ def update(radio):
 
 if __name__ == "__main__":
     app.run_server(debug=True, port=8000, host="127.0.0.1")
-
