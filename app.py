@@ -14,13 +14,15 @@ import us
 # Import data from Ipums
 person = pd.read_csv("person.csv.gz")
 spmu = pd.read_csv("spmu.csv.gz")
+# import baseline poverty gap, gini by state & us
+all_state_stats = pd.read_csv("all_state_stats.csv.gz")
+# import baseline white/black/child etc. poverty rates & population
+demog_stats = pd.read_csv("demog_stats.csv.gz")
 
 # Colors
 BLUE = "#1976D2"
 
 # create a list of all states, including "US" as a state
-# confusingly called state, but it is the full name and not the fip code
-# todo: rename in pre-processing.py
 states_no_us = person.state.unique().tolist()
 states_no_us.sort()
 states = ["US"] + states_no_us
@@ -463,7 +465,7 @@ def ubi(state, level, agi_tax, benefits, taxes, exclude):
         fig: outputs to "my-graph" in @app.callback
         fig2: outputs to "my-graph2" in @app.callback
     """
-
+    # if the "Reform level" selected by the user is federal
     if level == "federal":
         # combine taxes and benefits checklists into one list to be used to
         #  subset spmu dataframe
@@ -524,11 +526,18 @@ def ubi(state, level, agi_tax, benefits, taxes, exclude):
         spmu.new_resources += spmu.total_ubi
         spmu["new_resources_per_person"] = spmu.new_resources / spmu.numper
         # Sort by state
+
+        # NOTE: the "target" here refers to the population being
+        # measured for gini/poverty rate/etc.
+        # I.e. the total population of the state/country and
+        # INCLUDING those excluding form recieving ubi payments
+
         if state == "US":
             target_spmu = spmu.copy(deep=True)
         else:
             target_spmu = spmu[spmu.state == state].copy(deep=True)
 
+    # if the "Reform level" selected by the user is federal
     if level == "state":
 
         # Sort by state
@@ -582,7 +591,14 @@ def ubi(state, level, agi_tax, benefits, taxes, exclude):
             target_spmu.new_resources / target_spmu.numper
         )
 
-    # Merge and create target_persons
+    # TODO insert all_state_stats & demog_stats here
+    baseline_demog = demog_stats[(demog_stats.index == state)]
+
+    # Merge and create target_persons -
+    # NOTE: the "target" here refers to the population being
+    # measured for gini/poverty rate/etc.
+    # I.e. the total population of the state/country and
+    # INCLUDING those excluding form recieving ubi payments
     sub_spmu = target_spmu[
         ["spmfamunit", "year", "new_resources", "new_resources_per_person"]
     ]
