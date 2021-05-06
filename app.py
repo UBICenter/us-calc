@@ -15,9 +15,10 @@ import us
 person = pd.read_csv("person.csv.gz")
 spmu = pd.read_csv("spmu.csv.gz")
 # import baseline poverty gap, gini by state & us
-all_state_stats = pd.read_csv("all_state_stats.csv.gz")
+all_state_stats = pd.read_csv("all_state_stats.csv.gz", index_col=0)
 # import baseline white/black/child etc. poverty rates & population
-demog_stats = pd.read_csv("demog_stats.csv.gz")
+# TODO this index col should not be an index col
+demog_stats = pd.read_csv("demog_stats.csv.gz", index_col=0)
 
 # Colors
 BLUE = "#1976D2"
@@ -477,10 +478,14 @@ def ubi(state, level, agi_tax, benefits, taxes, exclude):
 
         # Calculate the new revenue and spmu resources from tax and benefit change
         for tax_benefit in taxes_benefits:
-            # subract taxes and benefits that have been changed from spmu resoures
+            # subract taxes and benefits that have been changed from spm unit's resoures
             spmu.new_resources -= spmu[tax_benefit]
+            # add that same value to revenue
             revenue += mdf.weighted_sum(spmu, tax_benefit, "spmwt")
 
+        # TODO figure out if this means repealed or not
+        # if "Income taxes" = ? and "child_tax_credit" = ?
+        # in taxes/benefits checklist
         if ("fedtaxac" in taxes_benefits) & ("ctc" in taxes_benefits):
             spmu.new_resources += spmu.ctc
             revenue -= mdf.weighted_sum(spmu, "ctc", "spmwt")
@@ -532,12 +537,13 @@ def ubi(state, level, agi_tax, benefits, taxes, exclude):
         # I.e. the total population of the state/country and
         # INCLUDING those excluding form recieving ubi payments
 
+        # state here refers to the selection from the drop down, not the reform level
         if state == "US":
             target_spmu = spmu.copy(deep=True)
         else:
             target_spmu = spmu[spmu.state == state].copy(deep=True)
 
-    # if the "Reform level" selected by the user is federal
+    # if the "Reform level" dropdown selected by the user is State
     if level == "state":
 
         # Sort by state
@@ -591,9 +597,6 @@ def ubi(state, level, agi_tax, benefits, taxes, exclude):
             target_spmu.new_resources / target_spmu.numper
         )
 
-    # TODO insert all_state_stats & demog_stats here
-    baseline_demog = demog_stats[(demog_stats.index == state)]
-
     # Merge and create target_persons -
     # NOTE: the "target" here refers to the population being
     # measured for gini/poverty rate/etc.
@@ -604,47 +607,75 @@ def ubi(state, level, agi_tax, benefits, taxes, exclude):
     ]
     target_persons = person.merge(sub_spmu, on=["spmfamunit", "year"])
 
-    # Calculate populations
-    # TODO preprocess all these, filter based on state
-    population = target_persons.asecwt.sum()
-    # TODO preprocess
-    child_population = (target_persons.child * target_persons.asecwt).sum()
-    # TODO preprocess
-    non_citizen_population = (target_persons.non_citizen * target_persons.asecwt).sum()
-    # TODO preprocess
-    non_citizen_child_population = (
-        target_persons.non_citizen_child * target_persons.asecwt
-    ).sum()
+    # filter demog_stats for selected state from dropdown
+    baseline_demog = demog_stats[(demog_stats.index == state)]
+
+    def return_demog(demog, metric, pct=True):
+        """
+        retrieve pre-processed data by demographic
+        args:
+            demog - string one of
+                ['person', 'adult', 'child', 'black', 'white_non_hispanic',
+            'hispanic', 'pwd', 'non_citizen', 'non_citizen_adult',
+            'non_citizen_child']
+            metric - string, one of ['pov_rate', 'pop']
+        returns:
+            value - float
+        """
+        df_copied = baseline_demog.copy(deep=True)
+
+        value = df_copied.loc[
+            (df_copied["demog"] == demog) & (df_copied["metric"] == metric),
+            "value",
+            # NOTE: returns the first value as a float, be careful if you redefine baseline_demog
+        ].values[0]
+
+        # multiply poverty rate by 100 to get percentage
+
+        return value
+
+    population = return_demog(demog="person", metric="pop")
+    child_population = return_demog(demog="child", metric="pop")
+    non_citizen_population = return_demog(demog="non_citizen", metric="pop")
+    non_citizen_child_population = return_demog(demog="non_citizen_child", metric="pop")
+
+    # filter all state stats gini, poverty_gap, etc. for dropdown state
+    baseline_all_state_stats = all_state_stats[(all_state_stats.index == state)]
+
+    def return_all_state(metric):
+        """filter baseline_all_state_stats and return value of select metric
+
+        Keyword arguments:
+        metric - string, one of 'poverty_gap', 'gini', 'total_resources'
+
+        returns:
+            value- float
+        """
+        df_copied = baseline_all_state_stats.copy(deep=True)
+
+        value = df_copied[metric].values[0]
+
+        return value
 
     # Calculate total change in resources
     # TODO preprocess
-    original_total_resources = (target_spmu.spmtotres * target_spmu.spmwt).sum()
+    original_total_resources = return_all_state("total_resources")
     # DO NOT PREPROCESS, new_resources
     new_total_resources = (target_spmu.new_resources * target_spmu.spmwt).sum()
     change_total_resources = new_total_resources - original_total_resources
     change_pp = change_total_resources / population
 
-    # Determine people originally in poverty
-    # TODO preprocess
-    target_persons["original_poor"] = (
-        target_persons.spmtotres < target_persons.spmthresh
-    )
-
-    # Calculate original poverty rate
-    # TODO preprocess
-    original_total_poor = (target_persons.original_poor * target_persons.asecwt).sum()
-    # TODO preprocess
-    original_poverty_rate = (original_total_poor / population) * 100
+    original_poverty_rate = return_demog("person", "pov_rate") * 100
 
     # Calculate the original poverty gap
     # TODO preprocess
-    target_spmu["poverty_gap"] = np.where(
-        target_spmu.spmtotres < target_spmu.spmthresh,
-        target_spmu.spmthresh - target_spmu.spmtotres,
-        0,
-    )
+    # target_spmu["poverty_gap"] = np.where(
+    #     target_spmu.spmtotres < target_spmu.spmthresh,
+    #     target_spmu.spmthresh - target_spmu.spmtotres,
+    #     0,
+    # )
     # TODO preprocess
-    original_poverty_gap = mdf.weighted_sum(target_spmu, "poverty_gap", "spmwt")
+    original_poverty_gap = return_all_state("poverty_gap")
 
     # Calculate the orginal demographic poverty rates
     # TODO use this function
@@ -658,25 +689,20 @@ def ubi(state, level, agi_tax, benefits, taxes, exclude):
             * 100
         )
 
-    # TODO preprocess
-    original_child_poverty_rate = pov_rate("child")
-    # TODO preprocess
-    original_adult_poverty_rate = pov_rate("adult")
-    # TODO preprocess
-    original_pwd_poverty_rate = pov_rate("pwd")
-    # TODO preprocess
-    original_white_poverty_rate = pov_rate("white_non_hispanic")
-    # TODO preprocess
-    original_black_poverty_rate = pov_rate("black")
-    # TODO preprocess
-    original_hispanic_poverty_rate = pov_rate("hispanic")
+    original_child_poverty_rate = return_demog("child", "pov_rate") * 100
+    original_adult_poverty_rate = return_demog("adult", "pov_rate") * 100
+    original_pwd_poverty_rate = return_demog("pwd", "pov_rate") * 100
+    original_white_poverty_rate = return_demog("white_non_hispanic", "pov_rate") * 100
+    original_black_poverty_rate = return_demog("black", "pov_rate") * 100
+    original_hispanic_poverty_rate = return_demog("hispanic", "pov_rate") * 100
 
     # Caluclate original gini
-    target_persons["spm_resources_per_person"] = (
-        target_persons.spmtotres / target_persons.numper
-    )
+    # target_persons["spm_resources_per_person"] = (
+    #     target_persons.spmtotres / target_persons.numper
+    # )
     # TODO preprocess
-    original_gini = mdf.gini(target_persons, "spm_resources_per_person", "asecwt")
+    original_gini = return_all_state("gini")
+    # mdf.gini(target_persons, "spm_resources_per_person", "asecwt")
 
     # Calculate poverty gap
     target_spmu["new_poverty_gap"] = np.where(
