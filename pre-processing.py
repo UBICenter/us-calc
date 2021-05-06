@@ -175,13 +175,15 @@ demog_stats.to_csv("demog_stats.csv.gz", compression="gzip")
 # Caluclate original gini
 person["spm_resources_per_person"] = person.spmtotres / person.numper
 # Caluclate original gini for US
-gini_us = pd.Series(mdf.gini(person, "spm_resources_per_person", "asecwt"))
+gini_us = pd.Series(mdf.gini(df=person, col="spm_resources_per_person", w="asecwt"))
 # add name to series
 gini_us.index = ["US"]
 
 
 # calculate gini for each group by state
-gini_states = mdf.gini(person, "spm_resources_per_person", w="asecwt", groupby="state")
+gini_states = mdf.gini(
+    df=person, col="spm_resources_per_person", w="asecwt", groupby="state"
+)
 
 # append US statistics as additional 'state'
 gini_ser = gini_states.append(gini_us)
@@ -194,21 +196,33 @@ spmu["poverty_gap"] = np.where(
     0,
 )
 poverty_gap_us = pd.Series(mdf.weighted_sum(spmu, "poverty_gap", w="spmwt"))
-
-
 # add name to series
 poverty_gap_us.index = ["US"]
-
-
 # calculate gini for each group by state
 poverty_gap_states = mdf.weighted_sum(spmu, "poverty_gap", w="spmwt", groupby="state")
-
 # append US statistics as additional 'state'
 poverty_gap_ser = poverty_gap_states.append(poverty_gap_us)
 poverty_gap_ser.name = "poverty_gap"
 
+# calculate the sum total of everyone's resources in US
+total_resources_us = pd.Series(mdf.weighted_sum(spmu, "spmtotres", w="spmwt"))
+# add name to series
+total_resources_us.index = ["US"]
+# calculate gini for each group by state
+total_resources_state = mdf.weighted_sum(
+    df=spmu, col="spmtotres", w="spmwt", groupby="state"
+)
+# append US statistics as additional 'state'
+total_resources_state = total_resources_state.append(total_resources_us)
+total_resources_state.name = "total_resources"
+
+# merge "total_resources","gini","poverty gap" into 1 df
 all_state_stats = poverty_gap_ser.to_frame().merge(
     gini_ser.to_frame(), left_index=True, right_index=True
 )
+all_state_stats = all_state_stats.merge(
+    total_resources_state.to_frame(), left_index=True, right_index=True
+)
+
 
 all_state_stats.to_csv("all_state_stats.csv.gz", compression="gzip")
