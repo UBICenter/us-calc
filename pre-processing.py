@@ -217,7 +217,7 @@ total_resources_state = total_resources_state.append(total_resources_us)
 total_resources_state.name = "total_resources"
 
 # merge "total_resources","gini","poverty gap" into 1 df
-all_state_stats = poverty_gap_ser.to_frame().merge(
+all_state_stats = poverty_gap_ser.to_frame().join(total_resources_state.to_frame())
     gini_ser.to_frame(), left_index=True, right_index=True
 )
 all_state_stats = all_state_stats.merge(
