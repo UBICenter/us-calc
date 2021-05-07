@@ -478,7 +478,7 @@ def ubi(state, level, agi_tax, benefits, taxes, exclude):
 
         # Calculate the new revenue and spmu resources from tax and benefit change
         for tax_benefit in taxes_benefits:
-            # subract taxes and benefits that have been changed from spm unit's resoures
+            # subtract taxes and benefits that have been changed from spm unit's resources
             spmu.new_resources -= spmu[tax_benefit]
             # add that same value to revenue
             revenue += mdf.weighted_sum(spmu, tax_benefit, "spmwt")
