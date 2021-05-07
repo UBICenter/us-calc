@@ -28,7 +28,7 @@ states_no_us = person.state.unique().tolist()
 states_no_us.sort()
 states = ["US"] + states_no_us
 
-# funcion to calculate % difference between one number and another
+# function to calculate % difference between one number and another
 def change(new, old):
     return ((new - old) / old * 100).round(2)
 
