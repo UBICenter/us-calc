@@ -53,7 +53,7 @@ person["state"] = (
 )
 
 # drop original statefip column from dataframe
-person = person.drop(columns=["statefip"])
+person.drop(columns=["statefip"], inplace=True)
 
 # Aggregate deductible and refundable child tax credits
 person["ctc"] = person.ctccrd + person.actccrd
