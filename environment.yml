@@ -3,6 +3,7 @@ channels:
   - conda-forge
 dependencies:
   - python
+  - us
   - dash
   - dash-bootstrap-components
   - plotly
