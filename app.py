@@ -448,7 +448,7 @@ app.layout = html.Div(
     Input(component_id="exclude-checklist", component_property="value"),
 )
 def ubi(state, level, agi_tax, benefits, taxes, exclude):
-    """this does everything from miscrosimulation to figure creation.
+    """this does everything from microsimulation to figure creation.
         Dash does something automatically where it takes the input arguments
         in the order given in the @app.callback decorator
     Args:
