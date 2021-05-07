@@ -506,7 +506,7 @@ def ubi(state, level, agi_tax, benefits, taxes, exclude):
         spmu["numper_ubi"] = spmu.numper
 
         if "children" in exclude:
-            # subract the number of children from the number of
+            # subtract the number of children from the number of
             # people in spm unit recieving ubi benfit
             spmu["numper_ubi"] -= spmu.child
 
