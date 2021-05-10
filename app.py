@@ -537,18 +537,18 @@ def ubi(state, level, agi_tax, benefits, taxes, exclude):
 
         # state here refers to the selection from the drop down, not the reform level
         if state == "US":
-            target_spmu = spmu.copy()
+            target_spmu = spmu
         else:
-            target_spmu = spmu[spmu.state == state].copy()
+            target_spmu = spmu[spmu.state == state]
 
     # if the "Reform level" dropdown selected by the user is State
     if level == "state":
 
         # Sort by state
         if state == "US":
-            target_spmu = spmu.copy()
+            target_spmu = spmu
         else:
-            target_spmu = spmu[spmu.state == state].copy()
+            target_spmu = spmu[spmu.state == state]
 
         # Initialize
         target_spmu["new_resources"] = target_spmu.spmtotres
