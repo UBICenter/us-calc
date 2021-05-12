@@ -19,9 +19,10 @@ person[["asecwt", "spmwt"]] /= 3
 person["adult"] = person.age >= 18
 person["child"] = person.age < 18
 
+# values >700 are do not know, unavailable survey response codes
 person["hispanic"] = person.hispan.between(1, 699)
-person["black"] = (person.race == 200) & (person.hispan == 0)
-person["white_non_hispanic"] = (person.race == 100) & (person.hispan == 0)
+person["black"] = (person.race == 200) & (~person.hispan)
+person["white_non_hispanic"] = (person.race == 100) & (~person.hispan)
 # check to make sure persons are double counted
 assert person[["black", "hispanic", "white_non_hispanic"]].sum(axis=1).max() == 1
 
