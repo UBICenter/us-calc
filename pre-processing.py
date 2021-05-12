@@ -130,7 +130,7 @@ demog_cols = [
     "non_citizen_child",
 ]
 
-poor_pop = person.loc[person.poor]
+poor_pop = person[person.poor]
 
 # calculate weighted sum of people living in poverty
 mdf.weighted_sum(poor_pop, demog_cols, "asecwt")
