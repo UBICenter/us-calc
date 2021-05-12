@@ -117,7 +117,7 @@ person["poor"] = person.spmthresh > person.spmtotres
 
 # create a column for all selected demographic variables
 # that will be used to calculate poverty rates
-demog_cols = [
+DEMOG_COLS = [
     "person",
     "adult",
     "child",
@@ -133,17 +133,17 @@ demog_cols = [
 poor_pop = person.loc[person.poor]
 
 # calculate weighted sum of people living in poverty
-mdf.weighted_sum(poor_pop, demog_cols, "asecwt")
+mdf.weighted_sum(poor_pop, DEMOG_COLS, "asecwt")
 # calculate poverty RATE for each DEMOGRAPHIC in US
-pov_rate_us = mdf.weighted_sum(poor_pop, demog_cols, "asecwt") / mdf.weighted_sum(
-    person, demog_cols, w="asecwt"
+pov_rate_us = mdf.weighted_sum(poor_pop, DEMOG_COLS, "asecwt") / mdf.weighted_sum(
+    person, DEMOG_COLS, w="asecwt"
 )
 # add name to series
 pov_rate_us.name = "US"
 # calculate poverty RATE for each group by state
 pov_rates = mdf.weighted_sum(
-    poor_pop, demog_cols, "asecwt", groupby="state"
-) / mdf.weighted_sum(person, demog_cols, w="asecwt", groupby="state")
+    poor_pop, DEMOG_COLS, "asecwt", groupby="state"
+) / mdf.weighted_sum(person, DEMOG_COLS, w="asecwt", groupby="state")
 
 # append US statistics as additional 'state'
 pov_df = pov_rates.append(pov_rate_us)
@@ -156,11 +156,11 @@ pov_df.insert(loc=1, column="metric", value="pov_rate")
 
 ##
 # calculate POPULATION for each DEMOGRAPHIC in US
-pop_us = mdf.weighted_sum(person, demog_cols, w="asecwt")
+pop_us = mdf.weighted_sum(person, DEMOG_COLS, w="asecwt")
 # add name to series
 pop_us.name = "US"
 # calculate POPULATION for each group by state
-pop_states = mdf.weighted_sum(person, demog_cols, w="asecwt", groupby="state")
+pop_states = mdf.weighted_sum(person, DEMOG_COLS, w="asecwt", groupby="state")
 # append US statistics as additional 'state'
 pop_df = pop_states.append(pop_us)
 # melt df from wide to long format
