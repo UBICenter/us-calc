@@ -21,7 +21,7 @@ person["child"] = person.age < 18
 
 person["black"] = person.race == 200
 person["white_non_hispanic"] = (person.race == 100) & (person.hispan == 0)
-person["hispanic"] = (person.hispan > 1) & person.hispan < 700
+person["hispanic"] = person.hispan.between(1, 699)
 person["pwd"] = person.diffany == 2
 person["non_citizen"] = person.citizen == 5
 person["non_citizen_child"] = (person.citizen == 5) & person.child
