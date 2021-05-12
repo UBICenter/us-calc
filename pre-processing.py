@@ -21,7 +21,7 @@ person["child"] = person.age < 18
 
 person["black"] = person.race == 200
 person["white_non_hispanic"] = (person.race == 100) & (person.hispan == 0)
-person["hispanic"] = (person.hispan > 1) & person.hispan < 700
+person["hispanic"] = person.hispan.between(1, 699)
 person["pwd"] = person.diffany == 2
 person["non_citizen"] = person.citizen == 5
 person["non_citizen_child"] = (person.citizen == 5) & person.child
@@ -130,7 +130,7 @@ DEMOG_COLS = [
     "non_citizen_child",
 ]
 
-poor_pop = person.loc[person.poor]
+poor_pop = person[person.poor]
 
 # calculate weighted sum of people living in poverty
 mdf.weighted_sum(poor_pop, DEMOG_COLS, "asecwt")
