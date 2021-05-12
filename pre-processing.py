@@ -19,9 +19,12 @@ person[["asecwt", "spmwt"]] /= 3
 person["adult"] = person.age >= 18
 person["child"] = person.age < 18
 
-person["black"] = person.race == 200
-person["white_non_hispanic"] = (person.race == 100) & (person.hispan == 0)
 person["hispanic"] = person.hispan.between(1, 699)
+person["black"] = (person.race == 200) & (person.hispan == 0)
+person["white_non_hispanic"] = (person.race == 100) & (person.hispan == 0)
+# check to make sure persons are double counted
+assert person[["black", "hispanic", "white_non_hispanic"]].sum(axis=1).max() == 1
+
 person["pwd"] = person.diffany == 2
 person["non_citizen"] = person.citizen == 5
 person["non_citizen_child"] = (person.citizen == 5) & person.child
@@ -217,11 +220,10 @@ total_resources_state = total_resources_state.append(total_resources_us)
 total_resources_state.name = "total_resources"
 
 # merge "total_resources","gini","poverty gap" into 1 df
-all_state_stats = poverty_gap_ser.to_frame().join(total_resources_state.to_frame())
-    gini_ser.to_frame(), left_index=True, right_index=True
-)
-all_state_stats = all_state_stats.merge(
-    total_resources_state.to_frame(), left_index=True, right_index=True
+all_state_stats = (
+    poverty_gap_ser.to_frame()
+    .join(total_resources_state.to_frame())
+    .join(gini_ser.to_frame())
 )
 
 
