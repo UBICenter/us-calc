@@ -19,16 +19,14 @@ person[["asecwt", "spmwt"]] /= 3
 person["adult"] = person.age >= 18
 person["child"] = person.age < 18
 
-# TODO check why assert error is happening
-# values >700 are do not know, unavailable survey response codes
-print(person.hispan.unique())
+# create mutually exclusive white non-hisp/black non-hisp/hispanic groups
 person["hispanic"] = person.hispan.between(1, 699)
-person["black"] = (person.race == 200) & (~person.hispan)
-person["white_non_hispanic"] = (person.race == 100) & (~person.hispan)
+person["black"] = (person.race == 200) & (~person.hispanic)
+person["white_non_hispanic"] = (person.race == 100) & (~person.hispanic)
 # check to make sure persons are double counted
-# assert person[["black", "hispanic", "white_non_hispanic"]].sum(axis=1).max() == 1
+assert person[["black", "hispanic", "white_non_hispanic"]].sum(axis=1).max() == 1
 
-#$end
+
 person["pwd"] = person.diffany == 2
 person["non_citizen"] = person.citizen == 5
 person["non_citizen_child"] = (person.citizen == 5) & person.child
