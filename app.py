@@ -27,9 +27,7 @@ states_no_us = person.state.unique().tolist()
 states_no_us.sort()
 states = ["US"] + states_no_us
 
-# function to calculate % difference between one number and another
-def change(new, old):
-    return ((new - old) / old * 100).round(2)
+
 
 
 # Create the 4 input cards
@@ -235,12 +233,13 @@ cards = dbc.CardDeck(
             color="info",
             outline=False,
         ),
+        # exclude/include from UBI checklist
         dbc.Card(
             [
                 dbc.CardBody(
                     [
                         html.Label(
-                            ["Exclude from UBI:"],
+                            ["Include in UBI:"],
                             style={
                                 "font-weight": "bold",
                                 "text-align": "center",
@@ -249,7 +248,7 @@ cards = dbc.CardDeck(
                             },
                         ),
                         dcc.Checklist(
-                            id="exclude-checklist",
+                            id="include-checklist",
                             options=[
                                 {
                                     "label": "non-Citizens",
@@ -258,7 +257,7 @@ cards = dbc.CardDeck(
                                 {"label": "Children", "value": "children"},
                                 {"label": "Adult", "value": "adults"},
                             ],
-                            value=[],
+                            value=["adults","children","non-citizens"],
                             labelStyle={"display": "block"},
                         ),
                     ]
@@ -444,9 +443,9 @@ app.layout = html.Div(
     Input(component_id="agi-slider", component_property="value"),
     Input(component_id="benefits-checklist", component_property="value"),
     Input(component_id="taxes-checklist", component_property="value"),
-    Input(component_id="exclude-checklist", component_property="value"),
+    Input(component_id="include-checklist", component_property="value"),
 )
-def ubi(state, level, agi_tax, benefits, taxes, exclude):
+def ubi(state, level, agi_tax, benefits, taxes, include):
     """this does everything from microsimulation to figure creation.
         Dash does something automatically where it takes the input arguments
         in the order given in the @app.callback decorator
@@ -456,7 +455,7 @@ def ubi(state, level, agi_tax, benefits, taxes, exclude):
         agi_tax:  component_id="agi-slider"
         benefits:  component_id="benefits-checklist"
         taxes:  component_id="taxes-checklist"
-        exclude: component_id="exclude-checklist"
+        include: component_id="include-checklist"
 
     Returns:
         ubi_line: outputs to  "ubi-output" in @app.callback
@@ -503,21 +502,21 @@ def ubi(state, level, agi_tax, benefits, taxes, exclude):
         # Calculate the total UBI a spmu recieves based on exclusions
         spmu["numper_ubi"] = spmu.numper
 
-        if "children" in exclude:
+        if "children" not in include:
             # subtract the number of children from the number of
             # people in spm unit receiving ubi benefit
             spmu["numper_ubi"] -= spmu.child
 
-        if "non_citizens" in exclude:
+        if "non_citizens" not in include:
             spmu["numper_ubi"] -= spmu.non_citizen
 
-        if ("children" in exclude) and ("non_citizens" in exclude):
+        if ("children" not in include) and ("non_citizens" not in include):
             spmu["numper_ubi"] += spmu.non_citizen_child
 
-        if "adults" in exclude:
+        if "adults" not in include:
             spmu["numper_ubi"] -= spmu.adult
 
-        if ("adults" in exclude) and ("non_citizens" in exclude):
+        if ("adults" not in include) and ("non_citizens" not in include):
             spmu["numper_ubi"] += spmu.non_citizen_adult
 
         # Assign UBI
@@ -569,19 +568,19 @@ def ubi(state, level, agi_tax, benefits, taxes, exclude):
         # Calculate the total UBI a spmu recieves based on exclusions
         target_spmu["numper_ubi"] = target_spmu.numper
 
-        if "children" in exclude:
+        if "children" not in include:
             target_spmu["numper_ubi"] -= target_spmu.child
 
-        if "non_citizens" in exclude:
+        if "non_citizens" not in include:
             target_spmu["numper_ubi"] -= target_spmu.non_citizen
 
-        if ("children" in exclude) and ("non_citizens" in exclude):
+        if ("children" not in include) and ("non_citizens" not in include):
             target_spmu["numper_ubi"] += target_spmu.non_citizen_child
 
-        if "adults" in exclude:
+        if "adults" not in include:
             target_spmu["numper_ubi"] -= target_spmu.adult
 
-        if ("adults" in exclude) and ("non_citizens" in exclude):
+        if ("adults" not in include) and ("non_citizens" not in include):
             target_spmu["numper_ubi"] += target_spmu.non_citizen_adult
 
         # Assign UBI
@@ -608,7 +607,7 @@ def ubi(state, level, agi_tax, benefits, taxes, exclude):
     # filter demog_stats for selected state from dropdown
     baseline_demog = demog_stats[(demog_stats.state == state)]
 
-    def return_demog(demog, metric, pct=True):
+    def return_demog(demog, metric):
         """
         retrieve pre-processed data by demographic
         args:
@@ -626,10 +625,6 @@ def ubi(state, level, agi_tax, benefits, taxes, exclude):
             "value",
             # NOTE: returns the first value as a float, be careful if you redefine baseline_demog
         ].values[0]
-
-        # multiply poverty rate by 100 to get percentage
-        if pct == True:
-            value *= 100
 
         return value
 
@@ -673,6 +668,10 @@ def ubi(state, level, agi_tax, benefits, taxes, exclude):
 
     # define orignal gini coefficient
     original_gini = return_all_state("gini")
+    
+    # function to calculate rel difference between one number and another
+    def change(new, old, round=3):
+        return ((new - old) / old).round(round)
 
     # Calculate poverty gap
     target_spmu["new_poverty_gap"] = np.where(
@@ -681,21 +680,18 @@ def ubi(state, level, agi_tax, benefits, taxes, exclude):
         0,
     )
     poverty_gap = mdf.weighted_sum(target_spmu, "new_poverty_gap", "spmwt")
-    poverty_gap_change = (
-        (poverty_gap - original_poverty_gap) / original_poverty_gap * 100
-    ).round(1)
+    poverty_gap_change = change(poverty_gap, original_poverty_gap)
 
     # Calculate the change in poverty rate
     target_persons["poor"] = target_persons.new_resources < target_persons.spmthresh
     total_poor = (target_persons.poor * target_persons.asecwt).sum()
-    poverty_rate = (total_poor / population) * 100
-    poverty_rate_change = (
-        (poverty_rate - original_poverty_rate) / original_poverty_rate * 100
-    ).round(1)
-
+    # TODO fix thism, the default  poverty rate is too high
+    poverty_rate = (total_poor / population)  
+    poverty_rate_change = change(poverty_rate,original_poverty_rate) 
+    
     # Calculate change in Gini
     gini = mdf.gini(target_persons, "new_resources_per_person", "asecwt")
-    gini_change = ((gini - original_gini) / original_gini * 100).round(1)
+    gini_change = change(gini, original_gini,3)
 
     # Calculate percent winners
     target_persons["winner"] = target_persons.new_resources > target_persons.spmtotres
@@ -706,7 +702,7 @@ def ubi(state, level, agi_tax, benefits, taxes, exclude):
     def pv_rate(column):
         return (
             mdf.weighted_mean(target_persons[target_persons[column]], "poor", "asecwt")
-            * 100
+           
         )
 
     child_poverty_rate = pv_rate("child")
@@ -720,49 +716,53 @@ def ubi(state, level, agi_tax, benefits, taxes, exclude):
     child_poverty_rate_change = (
         (child_poverty_rate - original_child_poverty_rate)
         / original_child_poverty_rate
-        * 100
     ).round(1)
     adult_poverty_rate_change = (
         (adult_poverty_rate - original_adult_poverty_rate)
         / original_adult_poverty_rate
-        * 100
     ).round(1)
     pwd_poverty_rate_change = (
-        (pwd_poverty_rate - original_pwd_poverty_rate) / original_pwd_poverty_rate * 100
+        (pwd_poverty_rate - original_pwd_poverty_rate) 
     ).round(1)
     white_poverty_rate_change = (
         (white_poverty_rate - original_white_poverty_rate)
         / original_white_poverty_rate
-        * 100
     ).round(1)
     black_poverty_rate_change = (
         (black_poverty_rate - original_black_poverty_rate)
         / original_black_poverty_rate
-        * 100
     ).round(1)
     hispanic_poverty_rate_change = (
         (hispanic_poverty_rate - original_hispanic_poverty_rate)
         / original_hispanic_poverty_rate
-        * 100
     ).round(1)
+    
+    child_poverty_rate_change = change(child_poverty_rate, original_child_poverty_rate)
+    adult_poverty_rate_change = change(adult_poverty_rate, original_adult_poverty_rate)
+    pwd_poverty_rate_change = change(pwd_poverty_rate, original_pwd_poverty_rate) 
+    white_poverty_rate_change = change(white_poverty_rate, original_white_poverty_rate)
+    black_poverty_rate_change = change(black_poverty_rate, original_black_poverty_rate)
+    hispanic_poverty_rate_change = change(hispanic_poverty_rate, original_hispanic_poverty_rate)
 
     # Round all numbers for display in hover
-    original_poverty_rate_string = str(round(original_poverty_rate, 1))
-    poverty_rate_string = str(round(poverty_rate, 1))
-    original_child_poverty_rate_string = str(round(original_child_poverty_rate, 1))
-    child_poverty_rate_string = str(round(child_poverty_rate, 1))
-    original_adult_poverty_rate_string = str(round(original_adult_poverty_rate, 1))
-    adult_poverty_rate_string = str(round(adult_poverty_rate, 1))
-    original_pwd_poverty_rate_string = str(round(original_pwd_poverty_rate, 1))
-    pwd_poverty_rate_string = str(round(pwd_poverty_rate, 1))
-    original_white_poverty_rate_string = str(round(original_white_poverty_rate, 1))
-    white_poverty_rate_string = str(round(white_poverty_rate, 1))
-    original_black_poverty_rate_string = str(round(original_black_poverty_rate, 1))
-    black_poverty_rate_string = str(round(black_poverty_rate, 1))
-    original_hispanic_poverty_rate_string = str(
-        round(original_hispanic_poverty_rate, 1)
-    )
-    hispanic_poverty_rate_string = str(round(hispanic_poverty_rate, 1))
+    def hover_string(metric,round_by=1):
+        '''formats 0.121 to 12.1%'''
+        string=str(round(metric * 100,round_by))
+        return (string)
+    original_poverty_rate_string = hover_string(original_poverty_rate)
+    poverty_rate_string = hover_string(poverty_rate)
+    original_child_poverty_rate_string = hover_string(original_child_poverty_rate)
+    child_poverty_rate_string = hover_string(child_poverty_rate)
+    original_adult_poverty_rate_string = hover_string(original_adult_poverty_rate)
+    adult_poverty_rate_string = hover_string(adult_poverty_rate)
+    original_pwd_poverty_rate_string = hover_string(original_pwd_poverty_rate)
+    pwd_poverty_rate_string = hover_string(pwd_poverty_rate)
+    original_white_poverty_rate_string = hover_string(original_white_poverty_rate)
+    white_poverty_rate_string = hover_string(white_poverty_rate)
+    original_black_poverty_rate_string = hover_string(original_black_poverty_rate)
+    black_poverty_rate_string = hover_string(black_poverty_rate)
+    original_hispanic_poverty_rate_string = hover_string(original_hispanic_poverty_rate)
+    hispanic_poverty_rate_string = hover_string(hispanic_poverty_rate)
 
     original_poverty_gap_billions = original_poverty_gap / 1e9
     original_poverty_gap_billions = int(original_poverty_gap_billions)
@@ -796,13 +796,17 @@ def ubi(state, level, agi_tax, benefits, taxes, exclude):
         "Black",
         "Hispanic",
     ]
-
+    fig_COLS=[
+                    poverty_rate_change, 
+                    poverty_gap_change, 
+                    gini_change
+                    ]
     fig = go.Figure(
         [
             go.Bar(
                 x=x,
-                y=[poverty_rate_change, poverty_gap_change, gini_change],
-                text=[poverty_rate_change, poverty_gap_change, gini_change],
+                y=fig_COLS,
+                text=fig_COLS,
                 hovertemplate=[
                     "Original poverty rate: "
                     + original_poverty_rate_string
@@ -826,7 +830,10 @@ def ubi(state, level, agi_tax, benefits, taxes, exclude):
     fig.update_layout(
         uniformtext_minsize=10, uniformtext_mode="hide", plot_bgcolor="white"
     )
-    fig.update_traces(texttemplate="%{text}%", textposition="auto")
+    fig.update_traces(
+        texttemplate='%{text:.1%f}',
+        textposition="auto"
+        )
     fig.update_layout(title_text="Economic overview", title_x=0.5)
 
     fig.update_xaxes(
@@ -835,39 +842,35 @@ def ubi(state, level, agi_tax, benefits, taxes, exclude):
 
     fig.update_yaxes(
         # title_text = "Percent change",
-        ticksuffix="%",
+        # ticksuffix="%",
         tickprefix="",
         tickfont={"size": 14},
         title_standoff=25,
     )
 
     fig.update_layout(
-        hoverlabel=dict(bgcolor="white", font_size=14, font_family="Roboto")
+        hoverlabel=dict(bgcolor="white", font_size=14, font_family="Roboto"),
+        yaxis_tickformat="%"
     )
 
     fig.update_xaxes(title_font=dict(size=14, family="Roboto", color="black"))
     fig.update_yaxes(title_font=dict(size=14, family="Roboto", color="black"))
+    
+    fig2_COLS= [
+                    child_poverty_rate_change,
+                    adult_poverty_rate_change,
+                    pwd_poverty_rate_change,
+                    white_poverty_rate_change,
+                    black_poverty_rate_change,
+                    hispanic_poverty_rate_change,
+                ]
 
     fig2 = go.Figure(
         [
             go.Bar(
                 x=x2,
-                y=[
-                    child_poverty_rate_change,
-                    adult_poverty_rate_change,
-                    pwd_poverty_rate_change,
-                    white_poverty_rate_change,
-                    black_poverty_rate_change,
-                    hispanic_poverty_rate_change,
-                ],
-                text=[
-                    child_poverty_rate_change,
-                    adult_poverty_rate_change,
-                    pwd_poverty_rate_change,
-                    white_poverty_rate_change,
-                    black_poverty_rate_change,
-                    hispanic_poverty_rate_change,
-                ],
+                y=fig2_COLS,
+                text=fig2_COLS,
                 hovertemplate=[
                     "Original child poverty rate: "
                     + original_child_poverty_rate_string
@@ -902,7 +905,7 @@ def ubi(state, level, agi_tax, benefits, taxes, exclude):
     fig2.update_layout(
         uniformtext_minsize=10, uniformtext_mode="hide", plot_bgcolor="white"
     )
-    fig2.update_traces(texttemplate="%{text}%", textposition="auto")
+    fig2.update_traces(texttemplate='%{text:.1%f}', textposition="auto")
     fig2.update_layout(title_text="Poverty rate breakdown", title_x=0.5)
 
     fig2.update_xaxes(
@@ -911,14 +914,15 @@ def ubi(state, level, agi_tax, benefits, taxes, exclude):
 
     fig2.update_yaxes(
         # title_text = "Percent change",
-        ticksuffix="%",
+        # ticksuffix="%",
         tickprefix="",
         tickfont={"size": 14},
         title_standoff=25,
     )
 
     fig2.update_layout(
-        hoverlabel=dict(bgcolor="white", font_size=14, font_family="Roboto")
+        hoverlabel=dict(bgcolor="white", font_size=14, font_family="Roboto"),
+        yaxis_tickformat="%"
     )
 
     fig2.update_xaxes(title_font=dict(size=14, family="Roboto", color="black"))
@@ -928,18 +932,18 @@ def ubi(state, level, agi_tax, benefits, taxes, exclude):
 
 
 @app.callback(
-    Output("exclude-checklist", "options"),
-    Input("exclude-checklist", "value"),
+    Output("include-checklist", "options"),
+    Input("include-checklist", "value"),
 )
 def update(checklist):
 
-    if "adults" in checklist:
+    if "adults" not in checklist:
         return [
             {"label": "Non-Citizens", "value": "non_citizens"},
             {"label": "Children", "value": "children", "disabled": True},
             {"label": "Adults", "value": "adults"},
         ]
-    elif "children" in checklist:
+    elif "children" not in checklist:
         return [
             {"label": "Non-Citizens", "value": "non_citizens"},
             {"label": "Children", "value": "children"},
