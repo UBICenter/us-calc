@@ -713,30 +713,6 @@ def ubi(state, level, agi_tax, benefits, taxes, include):
     hispanic_poverty_rate = pv_rate("hispanic")
 
     # Calculate the percent change in poverty rate for each demographic
-    child_poverty_rate_change = (
-        (child_poverty_rate - original_child_poverty_rate)
-        / original_child_poverty_rate
-    ).round(1)
-    adult_poverty_rate_change = (
-        (adult_poverty_rate - original_adult_poverty_rate)
-        / original_adult_poverty_rate
-    ).round(1)
-    pwd_poverty_rate_change = (
-        (pwd_poverty_rate - original_pwd_poverty_rate) 
-    ).round(1)
-    white_poverty_rate_change = (
-        (white_poverty_rate - original_white_poverty_rate)
-        / original_white_poverty_rate
-    ).round(1)
-    black_poverty_rate_change = (
-        (black_poverty_rate - original_black_poverty_rate)
-        / original_black_poverty_rate
-    ).round(1)
-    hispanic_poverty_rate_change = (
-        (hispanic_poverty_rate - original_hispanic_poverty_rate)
-        / original_hispanic_poverty_rate
-    ).round(1)
-    
     child_poverty_rate_change = change(child_poverty_rate, original_child_poverty_rate)
     adult_poverty_rate_change = change(adult_poverty_rate, original_adult_poverty_rate)
     pwd_poverty_rate_change = change(pwd_poverty_rate, original_pwd_poverty_rate) 
