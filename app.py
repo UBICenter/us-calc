@@ -28,8 +28,6 @@ states_no_us.sort()
 states = ["US"] + states_no_us
 
 
-
-
 # Create the 4 input cards
 cards = dbc.CardDeck(
     [
@@ -257,7 +255,7 @@ cards = dbc.CardDeck(
                                 {"label": "Children", "value": "children"},
                                 {"label": "Adult", "value": "adults"},
                             ],
-                            value=["adults","children","non-citizens"],
+                            value=["adults", "children", "non-citizens"],
                             labelStyle={"display": "block"},
                         ),
                     ]
@@ -668,7 +666,7 @@ def ubi(state, level, agi_tax, benefits, taxes, include):
 
     # define orignal gini coefficient
     original_gini = return_all_state("gini")
-    
+
     # function to calculate rel difference between one number and another
     def change(new, old, round=3):
         return ((new - old) / old).round(round)
@@ -686,12 +684,12 @@ def ubi(state, level, agi_tax, benefits, taxes, include):
     target_persons["poor"] = target_persons.new_resources < target_persons.spmthresh
     total_poor = (target_persons.poor * target_persons.asecwt).sum()
     # TODO fix thism, the default  poverty rate is too high
-    poverty_rate = (total_poor / population)  
-    poverty_rate_change = change(poverty_rate,original_poverty_rate) 
-    
+    poverty_rate = total_poor / population
+    poverty_rate_change = change(poverty_rate, original_poverty_rate)
+
     # Calculate change in Gini
     gini = mdf.gini(target_persons, "new_resources_per_person", "asecwt")
-    gini_change = change(gini, original_gini,3)
+    gini_change = change(gini, original_gini, 3)
 
     # Calculate percent winners
     target_persons["winner"] = target_persons.new_resources > target_persons.spmtotres
@@ -700,9 +698,8 @@ def ubi(state, level, agi_tax, benefits, taxes, include):
 
     # Calculate the new poverty rate for each demographic
     def pv_rate(column):
-        return (
-            mdf.weighted_mean(target_persons[target_persons[column]], "poor", "asecwt")
-           
+        return mdf.weighted_mean(
+            target_persons[target_persons[column]], "poor", "asecwt"
         )
 
     child_poverty_rate = pv_rate("child")
@@ -715,16 +712,19 @@ def ubi(state, level, agi_tax, benefits, taxes, include):
     # Calculate the percent change in poverty rate for each demographic
     child_poverty_rate_change = change(child_poverty_rate, original_child_poverty_rate)
     adult_poverty_rate_change = change(adult_poverty_rate, original_adult_poverty_rate)
-    pwd_poverty_rate_change = change(pwd_poverty_rate, original_pwd_poverty_rate) 
+    pwd_poverty_rate_change = change(pwd_poverty_rate, original_pwd_poverty_rate)
     white_poverty_rate_change = change(white_poverty_rate, original_white_poverty_rate)
     black_poverty_rate_change = change(black_poverty_rate, original_black_poverty_rate)
-    hispanic_poverty_rate_change = change(hispanic_poverty_rate, original_hispanic_poverty_rate)
+    hispanic_poverty_rate_change = change(
+        hispanic_poverty_rate, original_hispanic_poverty_rate
+    )
 
     # Round all numbers for display in hover
-    def hover_string(metric,round_by=1):
-        '''formats 0.121 to 12.1%'''
-        string=str(round(metric * 100,round_by))
-        return (string)
+    def hover_string(metric, round_by=1):
+        """formats 0.121 to 12.1%"""
+        string = str(round(metric * 100, round_by))
+        return string
+
     original_poverty_rate_string = hover_string(original_poverty_rate)
     poverty_rate_string = hover_string(poverty_rate)
     original_child_poverty_rate_string = hover_string(original_child_poverty_rate)
@@ -772,17 +772,13 @@ def ubi(state, level, agi_tax, benefits, taxes, include):
         "Black",
         "Hispanic",
     ]
-    fig_COLS=[
-                    poverty_rate_change, 
-                    poverty_gap_change, 
-                    gini_change
-                    ]
+    fig_cols = [poverty_rate_change, poverty_gap_change, gini_change]
     fig = go.Figure(
         [
             go.Bar(
                 x=x,
-                y=fig_COLS,
-                text=fig_COLS,
+                y=fig_cols,
+                text=fig_cols,
                 hovertemplate=[
                     "Original poverty rate: "
                     + original_poverty_rate_string
@@ -806,10 +802,7 @@ def ubi(state, level, agi_tax, benefits, taxes, include):
     fig.update_layout(
         uniformtext_minsize=10, uniformtext_mode="hide", plot_bgcolor="white"
     )
-    fig.update_traces(
-        texttemplate='%{text:.1%f}',
-        textposition="auto"
-        )
+    fig.update_traces(texttemplate="%{text:.1%f}", textposition="auto")
     fig.update_layout(title_text="Economic overview", title_x=0.5)
 
     fig.update_xaxes(
@@ -817,8 +810,6 @@ def ubi(state, level, agi_tax, benefits, taxes, include):
     )
 
     fig.update_yaxes(
-        # title_text = "Percent change",
-        # ticksuffix="%",
         tickprefix="",
         tickfont={"size": 14},
         title_standoff=25,
@@ -826,27 +817,27 @@ def ubi(state, level, agi_tax, benefits, taxes, include):
 
     fig.update_layout(
         hoverlabel=dict(bgcolor="white", font_size=14, font_family="Roboto"),
-        yaxis_tickformat="%"
+        yaxis_tickformat="%",
     )
 
     fig.update_xaxes(title_font=dict(size=14, family="Roboto", color="black"))
     fig.update_yaxes(title_font=dict(size=14, family="Roboto", color="black"))
-    
-    fig2_COLS= [
-                    child_poverty_rate_change,
-                    adult_poverty_rate_change,
-                    pwd_poverty_rate_change,
-                    white_poverty_rate_change,
-                    black_poverty_rate_change,
-                    hispanic_poverty_rate_change,
-                ]
+
+    fig2_cols = [
+        child_poverty_rate_change,
+        adult_poverty_rate_change,
+        pwd_poverty_rate_change,
+        white_poverty_rate_change,
+        black_poverty_rate_change,
+        hispanic_poverty_rate_change,
+    ]
 
     fig2 = go.Figure(
         [
             go.Bar(
                 x=x2,
-                y=fig2_COLS,
-                text=fig2_COLS,
+                y=fig2_cols,
+                text=fig2_cols,
                 hovertemplate=[
                     "Original child poverty rate: "
                     + original_child_poverty_rate_string
@@ -881,7 +872,7 @@ def ubi(state, level, agi_tax, benefits, taxes, include):
     fig2.update_layout(
         uniformtext_minsize=10, uniformtext_mode="hide", plot_bgcolor="white"
     )
-    fig2.update_traces(texttemplate='%{text:.1%f}', textposition="auto")
+    fig2.update_traces(texttemplate="%{text:.1%f}", textposition="auto")
     fig2.update_layout(title_text="Poverty rate breakdown", title_x=0.5)
 
     fig2.update_xaxes(
@@ -889,8 +880,6 @@ def ubi(state, level, agi_tax, benefits, taxes, include):
     )
 
     fig2.update_yaxes(
-        # title_text = "Percent change",
-        # ticksuffix="%",
         tickprefix="",
         tickfont={"size": 14},
         title_standoff=25,
@@ -898,7 +887,7 @@ def ubi(state, level, agi_tax, benefits, taxes, include):
 
     fig2.update_layout(
         hoverlabel=dict(bgcolor="white", font_size=14, font_family="Roboto"),
-        yaxis_tickformat="%"
+        yaxis_tickformat="%",
     )
 
     fig2.update_xaxes(title_font=dict(size=14, family="Roboto", color="black"))
