@@ -148,7 +148,7 @@ pov_rate_us.name = "US"
 # calculate poverty RATE for each group by state
 pov_rates = mdf.weighted_sum(
     poor_pop, DEMOG_COLS, "asecwt", groupby="state"
-) / mdf.weighted_sum(person, DEMOG_COLS, w="asecwt", groupby="state")
+) / mdf.weighted_sum(person, DEMOG_COLS, w="asecwt", groupby="state") 
 
 # append US statistics as additional 'state'
 pov_df = pov_rates.append(pov_rate_us)
