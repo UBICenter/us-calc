@@ -143,19 +143,15 @@ cards = dbc.CardDeck(
                                     "style": {"color": "#F8F8FF"},
                                 },
                                 10: {
-                                    # "label": "10%",
                                     "style": {"color": "#F8F8FF"},
                                 },
                                 20: {
-                                    # "label": "20%",
                                     "style": {"color": "#F8F8FF"},
                                 },
                                 30: {
-                                    # "label": "30%",
                                     "style": {"color": "#F8F8FF"},
                                 },
                                 40: {
-                                    # "label": "40%",
                                     "style": {"color": "#F8F8FF"},
                                 },
                                 50: {
