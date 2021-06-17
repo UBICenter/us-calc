@@ -6,10 +6,10 @@ dependencies:
   - dash
   - dash-bootstrap-components
   - plotly
-  - "pandas>=1.2.3"
+  - pandas
   - numpy
+  - us
   - pip
   - pip:
       - jupyter-book
-      - us
       - "git+https://github.com/PSLmodels/microdf"
