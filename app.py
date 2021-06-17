@@ -131,6 +131,7 @@ cards = dbc.CardDeck(
                             max=50,
                             step=1,
                             value=0,
+                            # TODO make slider easier to see when it's over tick marks
                             tooltip={
                                 "always_visible": True,
                                 "placement": "bottom",
@@ -142,19 +143,19 @@ cards = dbc.CardDeck(
                                     "style": {"color": "#F8F8FF"},
                                 },
                                 10: {
-                                    "label": "10%",
+                                    # "label": "10%",
                                     "style": {"color": "#F8F8FF"},
                                 },
                                 20: {
-                                    "label": "20%",
+                                    # "label": "20%",
                                     "style": {"color": "#F8F8FF"},
                                 },
                                 30: {
-                                    "label": "30%",
+                                    # "label": "30%",
                                     "style": {"color": "#F8F8FF"},
                                 },
                                 40: {
-                                    "label": "40%",
+                                    # "label": "40%",
                                     "style": {"color": "#F8F8FF"},
                                 },
                                 50: {
