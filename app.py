@@ -131,6 +131,7 @@ cards = dbc.CardDeck(
                             max=50,
                             step=1,
                             value=0,
+                            # TODO make slider easier to see when it's over tick marks
                             tooltip={
                                 "always_visible": True,
                                 "placement": "bottom",
@@ -142,19 +143,15 @@ cards = dbc.CardDeck(
                                     "style": {"color": "#F8F8FF"},
                                 },
                                 10: {
-                                    "label": "10%",
                                     "style": {"color": "#F8F8FF"},
                                 },
                                 20: {
-                                    "label": "20%",
                                     "style": {"color": "#F8F8FF"},
                                 },
                                 30: {
-                                    "label": "30%",
                                     "style": {"color": "#F8F8FF"},
                                 },
                                 40: {
-                                    "label": "40%",
                                     "style": {"color": "#F8F8FF"},
                                 },
                                 50: {
@@ -222,6 +219,7 @@ cards = dbc.CardDeck(
                                     "value": "spmheat",
                                 },
                             ],
+                            # do not repeal benefits by default
                             value=[],
                             labelStyle={"display": "block"},
                         ),
@@ -255,7 +253,12 @@ cards = dbc.CardDeck(
                                 {"label": "Children", "value": "children"},
                                 {"label": "Adult", "value": "adults"},
                             ],
-                            value=["adults", "children", "non-citizens"],
+                            # specify checked items
+                            value=[
+                                "adults",
+                                "children",
+                                "non_citizens",
+                            ],
                             labelStyle={"display": "block"},
                         ),
                     ]
@@ -772,13 +775,13 @@ def ubi(state, level, agi_tax, benefits, taxes, include):
         "Black",
         "Hispanic",
     ]
-    fig_cols = [poverty_rate_change, poverty_gap_change, gini_change]
-    fig = go.Figure(
+    econ_fig_cols = [poverty_rate_change, poverty_gap_change, gini_change]
+    econ_fig = go.Figure(
         [
             go.Bar(
                 x=x,
-                y=fig_cols,
-                text=fig_cols,
+                y=econ_fig_cols,
+                text=econ_fig_cols,
                 hovertemplate=[
                     "Original poverty rate: "
                     + original_poverty_rate_string
@@ -799,31 +802,31 @@ def ubi(state, level, agi_tax, benefits, taxes, include):
     )
 
     # Edit text and display the UBI amount and percent winners in title
-    fig.update_layout(
+    econ_fig.update_layout(
         uniformtext_minsize=10, uniformtext_mode="hide", plot_bgcolor="white"
     )
-    fig.update_traces(texttemplate="%{text:.1%f}", textposition="auto")
-    fig.update_layout(title_text="Economic overview", title_x=0.5)
+    econ_fig.update_traces(texttemplate="%{text:.1%f}", textposition="auto")
+    econ_fig.update_layout(title_text="Economic overview", title_x=0.5)
 
-    fig.update_xaxes(
+    econ_fig.update_xaxes(
         tickangle=0, title_text="", tickfont={"size": 14}, title_standoff=25
     )
 
-    fig.update_yaxes(
+    econ_fig.update_yaxes(
         tickprefix="",
         tickfont={"size": 14},
         title_standoff=25,
     )
 
-    fig.update_layout(
+    econ_fig.update_layout(
         hoverlabel=dict(bgcolor="white", font_size=14, font_family="Roboto"),
         yaxis_tickformat="%",
     )
 
-    fig.update_xaxes(title_font=dict(size=14, family="Roboto", color="black"))
-    fig.update_yaxes(title_font=dict(size=14, family="Roboto", color="black"))
+    econ_fig.update_xaxes(title_font=dict(size=14, family="Roboto", color="black"))
+    econ_fig.update_yaxes(title_font=dict(size=14, family="Roboto", color="black"))
 
-    fig2_cols = [
+    breakdown_fig_cols = [
         child_poverty_rate_change,
         adult_poverty_rate_change,
         pwd_poverty_rate_change,
@@ -832,12 +835,12 @@ def ubi(state, level, agi_tax, benefits, taxes, include):
         hispanic_poverty_rate_change,
     ]
 
-    fig2 = go.Figure(
+    breakdown_fig = go.Figure(
         [
             go.Bar(
                 x=x2,
-                y=fig2_cols,
-                text=fig2_cols,
+                y=breakdown_fig_cols,
+                text=breakdown_fig_cols,
                 hovertemplate=[
                     "Original child poverty rate: "
                     + original_child_poverty_rate_string
@@ -869,31 +872,31 @@ def ubi(state, level, agi_tax, benefits, taxes, include):
         ]
     )
 
-    fig2.update_layout(
+    breakdown_fig.update_layout(
         uniformtext_minsize=10, uniformtext_mode="hide", plot_bgcolor="white"
     )
-    fig2.update_traces(texttemplate="%{text:.1%f}", textposition="auto")
-    fig2.update_layout(title_text="Poverty rate breakdown", title_x=0.5)
+    breakdown_fig.update_traces(texttemplate="%{text:.1%f}", textposition="auto")
+    breakdown_fig.update_layout(title_text="Poverty rate breakdown", title_x=0.5)
 
-    fig2.update_xaxes(
+    breakdown_fig.update_xaxes(
         tickangle=0, title_text="", tickfont={"size": 14}, title_standoff=25
     )
 
-    fig2.update_yaxes(
+    breakdown_fig.update_yaxes(
         tickprefix="",
         tickfont={"size": 14},
         title_standoff=25,
     )
 
-    fig2.update_layout(
+    breakdown_fig.update_layout(
         hoverlabel=dict(bgcolor="white", font_size=14, font_family="Roboto"),
         yaxis_tickformat="%",
     )
 
-    fig2.update_xaxes(title_font=dict(size=14, family="Roboto", color="black"))
-    fig2.update_yaxes(title_font=dict(size=14, family="Roboto", color="black"))
+    breakdown_fig.update_xaxes(title_font=dict(size=14, family="Roboto", color="black"))
+    breakdown_fig.update_yaxes(title_font=dict(size=14, family="Roboto", color="black"))
 
-    return ubi_line, winners_line, resources_line, fig, fig2
+    return ubi_line, winners_line, resources_line, econ_fig, breakdown_fig
 
 
 @app.callback(
@@ -901,7 +904,17 @@ def ubi(state, level, agi_tax, benefits, taxes, include):
     Input("include-checklist", "value"),
 )
 def update(checklist):
+    """[summary]
+    prevent users from excluding both adults and children
+    Parameters
+    ----------
+    checklist : list
+        takes the input "include-checklist" from the callback
 
+    Returns
+    -------
+    "Include in UBI" checklist with correct options
+    """
     if "adults" not in checklist:
         return [
             {"label": "Non-Citizens", "value": "non_citizens"},
