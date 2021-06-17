@@ -222,6 +222,7 @@ cards = dbc.CardDeck(
                                     "value": "spmheat",
                                 },
                             ],
+                            # do not repeal benefits by default
                             value=[],
                             labelStyle={"display": "block"},
                         ),
