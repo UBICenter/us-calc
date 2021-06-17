@@ -3,7 +3,6 @@ channels:
   - conda-forge
 dependencies:
   - python
-  - us
   - dash
   - dash-bootstrap-components
   - plotly
@@ -12,4 +11,5 @@ dependencies:
   - pip
   - pip:
       - jupyter-book
+      - us
       - "git+https://github.com/PSLmodels/microdf"
