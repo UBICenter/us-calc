@@ -131,7 +131,6 @@ cards = dbc.CardDeck(
                             max=50,
                             step=1,
                             value=0,
-                            # TODO make slider easier to see when it's over tick marks
                             tooltip={
                                 "always_visible": True,
                                 "placement": "bottom",
@@ -301,6 +300,22 @@ text = (
                         },
                     ),
                     html.Div(
+                        id="revenue-output",
+                        style={
+                            "text-align": "left",
+                            "color": "black",
+                            "fontSize": 25,
+                        },
+                    ),
+                    html.Div(
+                        id="ubi-population-output",
+                        style={
+                            "text-align": "left",
+                            "color": "black",
+                            "fontSize": 25,
+                        },
+                    ),
+                    html.Div(
                         id="winners-output",
                         style={
                             "text-align": "left",
@@ -435,6 +450,8 @@ app.layout = html.Div(
 
 @app.callback(
     Output(component_id="ubi-output", component_property="children"),
+    Output(component_id="revenue-output", component_property="children"),
+    Output(component_id="ubi-population-output", component_property="children"),
     Output(component_id="winners-output", component_property="children"),
     Output(component_id="resources-output", component_property="children"),
     Output(component_id="my-graph", component_property="figure"),
@@ -446,7 +463,7 @@ app.layout = html.Div(
     Input(component_id="taxes-checklist", component_property="value"),
     Input(component_id="include-checklist", component_property="value"),
 )
-def ubi(state, level, agi_tax, benefits, taxes, include):
+def ubi(dropdown_state, level, agi_tax, benefits, taxes, include):
     """this does everything from microsimulation to figure creation.
         Dash does something automatically where it takes the input arguments
         in the order given in the @app.callback decorator
@@ -460,11 +477,15 @@ def ubi(state, level, agi_tax, benefits, taxes, include):
 
     Returns:
         ubi_line: outputs to  "ubi-output" in @app.callback
+        revenue_line: outputs to "revenue-output" in @app.callback
+        ubi_population_line: outputs to "revenue-output" in @app.callback
         winners_line: outputs to "winners-output" in @app.callback
         resources_line: outputs to "resources-output" in @app.callback
         fig: outputs to "my-graph" in @app.callback
         fig2: outputs to "my-graph2" in @app.callback
     """
+
+    # -------------------- calculations based on reform level -------------------- #
     # if the "Reform level" selected by the user is federal
     if level == "federal":
         # combine taxes and benefits checklists into one list to be used to
@@ -521,9 +542,10 @@ def ubi(state, level, agi_tax, benefits, taxes, include):
             spmu["numper_ubi"] += spmu.non_citizen_adult
 
         # Assign UBI
+        # TODO: add to outputs
         ubi_population = (spmu.numper_ubi * spmu.spmwt).sum()
-        ubi = revenue / ubi_population
-        spmu["total_ubi"] = ubi * spmu.numper_ubi
+        ubi_annual = revenue / ubi_population
+        spmu["total_ubi"] = ubi_annual * spmu.numper_ubi
 
         # Calculate change in resources
         spmu.new_resources += spmu.total_ubi
@@ -536,19 +558,19 @@ def ubi(state, level, agi_tax, benefits, taxes, include):
         # INCLUDING those excluding form recieving ubi payments
 
         # state here refers to the selection from the drop down, not the reform level
-        if state == "US":
+        if dropdown_state == "US":
             target_spmu = spmu
         else:
-            target_spmu = spmu[spmu.state == state]
+            target_spmu = spmu[spmu.state == dropdown_state]
 
     # if the "Reform level" dropdown selected by the user is State
     if level == "state":
 
         # Sort by state
-        if state == "US":
+        if dropdown_state == "US":
             target_spmu = spmu
         else:
-            target_spmu = spmu[spmu.state == state]
+            target_spmu = spmu[spmu.state == dropdown_state]
 
         # Initialize
         target_spmu["new_resources"] = target_spmu.spmtotres
@@ -586,14 +608,16 @@ def ubi(state, level, agi_tax, benefits, taxes, include):
 
         # Assign UBI
         ubi_population = (target_spmu.numper_ubi * target_spmu.spmwt).sum()
-        ubi = revenue / ubi_population
-        target_spmu["total_ubi"] = ubi * target_spmu.numper_ubi
+        ubi_annual = revenue / ubi_population
+        target_spmu["total_ubi"] = ubi_annual * target_spmu.numper_ubi
 
         # Calculate change in resources
         target_spmu.new_resources += target_spmu.total_ubi
         target_spmu["new_resources_per_person"] = (
             target_spmu.new_resources / target_spmu.numper
         )
+
+    # NOTE: code after this applies to both reform levels
 
     # Merge and create target_persons -
     # NOTE: the "target" here refers to the population being
@@ -606,7 +630,7 @@ def ubi(state, level, agi_tax, benefits, taxes, include):
     target_persons = person.merge(sub_spmu, on=["spmfamunit", "year"])
 
     # filter demog_stats for selected state from dropdown
-    baseline_demog = demog_stats[(demog_stats.state == state)]
+    baseline_demog = demog_stats[(demog_stats.state == dropdown_state)]
 
     def return_demog(demog, metric):
         """
@@ -635,7 +659,9 @@ def ubi(state, level, agi_tax, benefits, taxes, include):
     non_citizen_child_population = return_demog(demog="non_citizen_child", metric="pop")
 
     # filter all state stats gini, poverty_gap, etc. for dropdown state
-    baseline_all_state_stats = all_state_stats[(all_state_stats.index == state)]
+    baseline_all_state_stats = all_state_stats[
+        (all_state_stats.index == dropdown_state)
+    ]
 
     def return_all_state(metric):
         """filter baseline_all_state_stats and return value of select metric
@@ -659,14 +685,6 @@ def ubi(state, level, agi_tax, benefits, taxes, include):
     original_poverty_rate = return_demog("person", "pov_rate")
 
     original_poverty_gap = return_all_state("poverty_gap")
-
-    original_child_poverty_rate = return_demog("child", "pov_rate")
-    original_adult_poverty_rate = return_demog("adult", "pov_rate")
-    original_pwd_poverty_rate = return_demog("pwd", "pov_rate")
-    original_white_poverty_rate = return_demog("white_non_hispanic", "pov_rate")
-    original_black_poverty_rate = return_demog("black", "pov_rate")
-    original_hispanic_poverty_rate = return_demog("hispanic", "pov_rate")
-
     # define orignal gini coefficient
     original_gini = return_all_state("gini")
 
@@ -686,7 +704,6 @@ def ubi(state, level, agi_tax, benefits, taxes, include):
     # Calculate the change in poverty rate
     target_persons["poor"] = target_persons.new_resources < target_persons.spmthresh
     total_poor = (target_persons.poor * target_persons.asecwt).sum()
-    # TODO fix thism, the default  poverty rate is too high
     poverty_rate = total_poor / population
     poverty_rate_change = change(poverty_rate, original_poverty_rate)
 
@@ -699,11 +716,24 @@ def ubi(state, level, agi_tax, benefits, taxes, include):
     total_winners = (target_persons.winner * target_persons.asecwt).sum()
     percent_winners = (total_winners / population * 100).round(1)
 
+    # -------------- calculate all of the poverty breakdown numbers -------------- #
     # Calculate the new poverty rate for each demographic
     def pv_rate(column):
         return mdf.weighted_mean(
             target_persons[target_persons[column]], "poor", "asecwt"
         )
+
+    # TODO: use dictionaries instead of variable names
+
+    # breakdowns = {demog: {
+    # demog_original_poverty_rate, demog_povery_rate, demog_poverty_rate_change}}
+
+    original_child_poverty_rate = return_demog("child", "pov_rate")
+    original_adult_poverty_rate = return_demog("adult", "pov_rate")
+    original_pwd_poverty_rate = return_demog("pwd", "pov_rate")
+    original_white_poverty_rate = return_demog("white_non_hispanic", "pov_rate")
+    original_black_poverty_rate = return_demog("black", "pov_rate")
+    original_hispanic_poverty_rate = return_demog("hispanic", "pov_rate")
 
     child_poverty_rate = pv_rate("child")
     adult_poverty_rate = pv_rate("adult")
@@ -727,6 +757,8 @@ def ubi(state, level, agi_tax, benefits, taxes, include):
         """formats 0.121 to 12.1%"""
         string = str(round(metric * 100, round_by))
         return string
+
+    # TODO: use dictionaries instead of variable names
 
     original_poverty_rate_string = hover_string(original_poverty_rate)
     poverty_rate_string = hover_string(poverty_rate)
@@ -754,32 +786,79 @@ def ubi(state, level, agi_tax, benefits, taxes, include):
     original_gini_string = str(round(original_gini, 3))
     gini_string = str(round(gini, 3))
 
+    # -------------------- populates "Results of your reform:" ------------------- #
+
     # Convert UBI and winners to string for title of chart
-    ubi_string = str("{:,}".format(int(round(ubi / 12))))
+    ubi_string = str("{:,}".format(int(round(ubi_annual / 12))))
     winners_string = str(percent_winners)
     change_pp = int(change_pp)
     change_pp = "{:,}".format(change_pp)
     resources_string = str(change_pp)
 
+    # populates Monthly UBI
     ubi_line = "Monthly UBI: $" + ubi_string
+
+    # populates 'Funds for UBI'
+    if revenue > 1e9:
+        revenue_line = "Funds for UBI: $" + str((revenue / 1e9).round(1)) + " B"
+    else:
+        revenue_line = "Funds for UBI: $" + str((revenue / 1e6).round(1)) + " M"
+
+    # populates revenue for UBI
+    if dropdown_state != "US":
+        state_spmu = target_spmu[target_spmu.state == dropdown_state]
+        state_ubi_population = (state_spmu.numper_ubi * state_spmu.spmwt).sum()
+
+        if state_ubi_population > 1e6:
+            ubi_population_line = (
+                "UBI Population: " + str((state_ubi_population / 1e6).round(1)) + " M"
+            )
+        else:
+            ubi_population_line = (
+                "UBI Population: " + str((state_ubi_population / 1e3).round(1)) + " K"
+            )
+
+        state_revenue = ubi_annual * state_ubi_population
+
+        if state_revenue > 1e9:
+            revenue_line = (
+                "Funds for UBI ("
+                + dropdown_state
+                + "): $"
+                + str((state_revenue / 1e9).round(1))
+                + " B"
+            )
+        else:
+            revenue_line = (
+                "Funds for UBI ("
+                + dropdown_state
+                + "): $"
+                + str((state_revenue / 1e6).round(1))
+                + " M"
+            )
+
+    else:
+        if ubi_population > 1e6:
+            ubi_population_line = (
+                "UBI Population: " + str((ubi_population / 1e6).round(1)) + " M"
+            )
+        else:
+            ubi_population_line = (
+                "UBI Population: " + str((ubi_population / 1e3).round(1)) + " K"
+            )
+
     winners_line = "Percent better off: " + winners_string + "%"
     resources_line = "Average change in resources per person: $" + resources_string
 
+    # ------------------- populate economic breakdown bar chart ------------------ #
+
     # Create x-axis labels for each chart
-    x = ["Poverty rate", "Poverty gap", "Gini index"]
-    x2 = [
-        "Child",
-        "Adult",
-        "People<br>with<br>disabilities",
-        "White",
-        "Black",
-        "Hispanic",
-    ]
+    econ_fig_x_lab = ["Poverty rate", "Poverty gap", "Gini index"]
     econ_fig_cols = [poverty_rate_change, poverty_gap_change, gini_change]
     econ_fig = go.Figure(
         [
             go.Bar(
-                x=x,
+                x=econ_fig_x_lab,
                 y=econ_fig_cols,
                 text=econ_fig_cols,
                 hovertemplate=[
@@ -826,6 +905,17 @@ def ubi(state, level, agi_tax, benefits, taxes, include):
     econ_fig.update_xaxes(title_font=dict(size=14, family="Roboto", color="black"))
     econ_fig.update_yaxes(title_font=dict(size=14, family="Roboto", color="black"))
 
+    # --------------------- populate poverty breakdown charts -------------------- #
+
+    breakdown_fig_x_lab = [
+        "Child",
+        "Adult",
+        "People<br>with<br>disabilities",
+        "White",
+        "Black",
+        "Hispanic",
+    ]
+
     breakdown_fig_cols = [
         child_poverty_rate_change,
         adult_poverty_rate_change,
@@ -838,7 +928,7 @@ def ubi(state, level, agi_tax, benefits, taxes, include):
     breakdown_fig = go.Figure(
         [
             go.Bar(
-                x=x2,
+                x=breakdown_fig_x_lab,
                 y=breakdown_fig_cols,
                 text=breakdown_fig_cols,
                 hovertemplate=[
@@ -896,7 +986,15 @@ def ubi(state, level, agi_tax, benefits, taxes, include):
     breakdown_fig.update_xaxes(title_font=dict(size=14, family="Roboto", color="black"))
     breakdown_fig.update_yaxes(title_font=dict(size=14, family="Roboto", color="black"))
 
-    return ubi_line, winners_line, resources_line, econ_fig, breakdown_fig
+    return (
+        ubi_line,
+        revenue_line,
+        ubi_population_line,
+        winners_line,
+        resources_line,
+        econ_fig,
+        breakdown_fig,
+    )
 
 
 @app.callback(
