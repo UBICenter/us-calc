@@ -630,7 +630,7 @@ def ubi(dropdown_state, level, agi_tax, benefits, taxes, include):
     target_persons = person.merge(sub_spmu, on=["spmfamunit", "year"])
 
     # filter demog_stats for selected state from dropdown
-    baseline_demog = demog_stats[(demog_stats.state == dropdown_state)]
+    baseline_demog = demog_stats[demog_stats.state == dropdown_state]
 
     def return_demog(demog, metric):
         """
@@ -659,9 +659,7 @@ def ubi(dropdown_state, level, agi_tax, benefits, taxes, include):
     non_citizen_child_population = return_demog(demog="non_citizen_child", metric="pop")
 
     # filter all state stats gini, poverty_gap, etc. for dropdown state
-    baseline_all_state_stats = all_state_stats[
-        (all_state_stats.index == dropdown_state)
-    ]
+    baseline_all_state_stats = all_state_stats[all_state_stats.index == dropdown_state]
 
     def return_all_state(metric):
         """filter baseline_all_state_stats and return value of select metric
