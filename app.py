@@ -718,54 +718,6 @@ def ubi(dropdown_state, level, agi_tax, benefits, taxes, include):
         for demog in demogs
     }
 
-    original_child_poverty_rate = return_demog("child", "pov_rate")
-    original_adult_poverty_rate = return_demog("adult", "pov_rate")
-    original_pwd_poverty_rate = return_demog("pwd", "pov_rate")
-    original_white_poverty_rate = return_demog("white_non_hispanic", "pov_rate")
-    original_black_poverty_rate = return_demog("black", "pov_rate")
-    original_hispanic_poverty_rate = return_demog("hispanic", "pov_rate")
-
-    child_poverty_rate = pv_rate("child")
-    adult_poverty_rate = pv_rate("adult")
-    pwd_poverty_rate = pv_rate("pwd")
-    white_poverty_rate = pv_rate("white_non_hispanic")
-    black_poverty_rate = pv_rate("black")
-    hispanic_poverty_rate = pv_rate("hispanic")
-
-    # Calculate the percent change in poverty rate for each demographic
-    child_poverty_rate_change = rel_change(
-        child_poverty_rate, original_child_poverty_rate
-    )
-    adult_poverty_rate_change = rel_change(
-        adult_poverty_rate, original_adult_poverty_rate
-    )
-    pwd_poverty_rate_change = rel_change(pwd_poverty_rate, original_pwd_poverty_rate)
-    white_poverty_rate_change = rel_change(
-        white_poverty_rate, original_white_poverty_rate
-    )
-    black_poverty_rate_change = rel_change(
-        black_poverty_rate, original_black_poverty_rate
-    )
-    hispanic_poverty_rate_change = rel_change(
-        hispanic_poverty_rate, original_hispanic_poverty_rate
-    )
-
-    # TODO: use dictionaries instead of variable names
-    # TODO move this near graph creation
-    # demographic poverty rate strings
-    original_child_poverty_rate_string = hover_string(original_child_poverty_rate)
-    child_poverty_rate_string = hover_string(child_poverty_rate)
-    original_adult_poverty_rate_string = hover_string(original_adult_poverty_rate)
-    adult_poverty_rate_string = hover_string(adult_poverty_rate)
-    original_pwd_poverty_rate_string = hover_string(original_pwd_poverty_rate)
-    pwd_poverty_rate_string = hover_string(pwd_poverty_rate)
-    original_white_poverty_rate_string = hover_string(original_white_poverty_rate)
-    white_poverty_rate_string = hover_string(white_poverty_rate)
-    original_black_poverty_rate_string = hover_string(original_black_poverty_rate)
-    black_poverty_rate_string = hover_string(black_poverty_rate)
-    original_hispanic_poverty_rate_string = hover_string(original_hispanic_poverty_rate)
-    hispanic_poverty_rate_string = hover_string(hispanic_poverty_rate)
-
     # format original and new overall poverty rate
     original_poverty_rate_string = hover_string(original_poverty_rate)
     poverty_rate_string = hover_string(poverty_rate)
@@ -919,7 +871,6 @@ def ubi(dropdown_state, level, agi_tax, benefits, taxes, include):
                 x=breakdown_fig_x_lab,
                 y=breakdown_fig_cols,
                 text=breakdown_fig_cols,
-                # TODO either do the "%" in the hover_string() function or do it here
                 hovertemplate=hovertemplate,
                 marker_color=BLUE,
             )
@@ -927,28 +878,30 @@ def ubi(dropdown_state, level, agi_tax, benefits, taxes, include):
     )
 
     breakdown_fig.update_layout(
-        uniformtext_minsize=10, uniformtext_mode="hide", plot_bgcolor="white"
+        uniformtext_minsize=10,
+        uniformtext_mode="hide",
+        plot_bgcolor="white",
+        title_text="Poverty rate breakdown",
+        title_x=0.5,
+        hoverlabel=dict(bgcolor="white", font_size=14, font_family="Roboto"),
+        yaxis_tickformat="%",
     )
     breakdown_fig.update_traces(texttemplate="%{text:.1%f}", textposition="auto")
-    breakdown_fig.update_layout(title_text="Poverty rate breakdown", title_x=0.5)
 
     breakdown_fig.update_xaxes(
-        tickangle=0, title_text="", tickfont={"size": 14}, title_standoff=25
+        tickangle=0,
+        title_text="",
+        tickfont={"size": 14},
+        title_standoff=25,
+        title_font=dict(size=14, family="Roboto", color="black"),
     )
 
     breakdown_fig.update_yaxes(
         tickprefix="",
         tickfont={"size": 14},
         title_standoff=25,
+        title_font=dict(size=14, family="Roboto", color="black"),
     )
-
-    breakdown_fig.update_layout(
-        hoverlabel=dict(bgcolor="white", font_size=14, font_family="Roboto"),
-        yaxis_tickformat="%",
-    )
-
-    breakdown_fig.update_xaxes(title_font=dict(size=14, family="Roboto", color="black"))
-    breakdown_fig.update_yaxes(title_font=dict(size=14, family="Roboto", color="black"))
 
     return (
         ubi_line,
