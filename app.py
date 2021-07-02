@@ -644,7 +644,7 @@ def ubi(dropdown_state, level, agi_tax, benefits, taxes, include):
     original_gini = return_all_state("gini")
 
     # function to calculate rel difference between one number and another
-    def change(new, old, round=3):
+    def rel_change(new, old, round=3):
         return ((new - old) / old).round(round)
 
     # Calculate poverty gap
@@ -654,17 +654,17 @@ def ubi(dropdown_state, level, agi_tax, benefits, taxes, include):
         0,
     )
     poverty_gap = mdf.weighted_sum(target_spmu, "new_poverty_gap", "spmwt")
-    poverty_gap_change = change(poverty_gap, original_poverty_gap)
+    poverty_gap_change = rel_change(poverty_gap, original_poverty_gap)
 
     # Calculate the change in poverty rate
     target_persons["poor"] = target_persons.new_resources < target_persons.spmthresh
     total_poor = (target_persons.poor * target_persons.asecwt).sum()
     poverty_rate = total_poor / population
-    poverty_rate_change = change(poverty_rate, original_poverty_rate)
+    poverty_rate_change = rel_change(poverty_rate, original_poverty_rate)
 
     # Calculate change in Gini
     gini = mdf.gini(target_persons, "new_resources_per_person", "asecwt")
-    gini_change = change(gini, original_gini, 3)
+    gini_change = rel_change(gini, original_gini, 3)
 
     # Calculate percent winners
     target_persons["winner"] = target_persons.new_resources > target_persons.spmtotres
@@ -678,51 +678,44 @@ def ubi(dropdown_state, level, agi_tax, benefits, taxes, include):
             target_persons[target_persons[column]], "poor", "asecwt"
         )
 
-    # TODO: use dictionaries instead of variable names
+    # Round all numbers for display in hover
+    def hover_string(metric, round_by=1):
+        """formats 0.121 to 12.1%"""
+        string = str(round(metric * 100, round_by)) + "%"
+        return string
 
+    # TODO: use dictionaries instead of variable names
+    # TODO: change "white_non_hispanic" in pre-processing.py to "white"
     demogs = ["child", "adult", "pwd", "white_non_hispanic", "black", "hispanic"]
     # create dictionary for demographic breakdown of poverty rates
     pov_breakdowns = {
-        "original_pov_rates": {
-            demog: return_demog(demog, "pov_rate") for demog in demogs
-        },
-        "new_pov_rates": {demog: pv_rate(demog) for demog in demogs},
+        # return precomputed baseline poverty rates
+        "original_rates": {demog: return_demog(demog, "pov_rate") for demog in demogs},
+        "new_rates": {demog: pv_rate(demog) for demog in demogs},
     }
 
     # add poverty rate changes to dictionary
-    pov_breakdowns["pov_rate_changes"] = {
-        demog: change(
-            pov_breakdowns["new_pov_rates"][demog],
-            pov_breakdowns["original_pov_rates"][demog],
+    pov_breakdowns["changes"] = {
+        # Calculate the percent change in poverty rate for each demographic
+        demog: rel_change(
+            pov_breakdowns["new_rates"][demog],
+            pov_breakdowns["original_rates"][demog],
         )
         for demog in demogs
     }
-    print(pov_breakdowns)
-    {
-        "original_pov_rates": {
-            "child": 0.1388868704262604,
-            "adult": 0.1245815309192201,
-            "pwd": 0.2026032882275905,
-            "white_non_hispanic": 0.0888199526653687,
-            "black": 0.2014309586205856,
-            "hispanic": 0.2014858439822594,
-        },
-        "new_pov_rates": {
-            "child": 0.10035410700845945,
-            "adult": 0.1025262560260807,
-            "pwd": 0.16418696517799683,
-            "white_non_hispanic": 0.07331087035130869,
-            "black": 0.15660758467611635,
-            "hispanic": 0.15498715114941644,
-        },
-        "pov_rate_changes": {
-            "child": -0.277,
-            "adult": -0.177,
-            "pwd": -0.19,
-            "white_non_hispanic": -0.175,
-            "black": -0.223,
-            "hispanic": -0.231,
-        },
+
+    # create string for hover template
+    pov_breakdowns["strings"] = {
+        demog: "Original "
+        + demog
+        + " povery rate: "
+        + hover_string(pov_breakdowns["original_rates"][demog])
+        + "<br><extra></extra>"
+        + "New "
+        + demog
+        + " povery rate: "
+        + hover_string(pov_breakdowns["new_rates"][demog])
+        for demog in demogs
     }
 
     original_child_poverty_rate = return_demog("child", "pov_rate")
@@ -740,20 +733,22 @@ def ubi(dropdown_state, level, agi_tax, benefits, taxes, include):
     hispanic_poverty_rate = pv_rate("hispanic")
 
     # Calculate the percent change in poverty rate for each demographic
-    child_poverty_rate_change = change(child_poverty_rate, original_child_poverty_rate)
-    adult_poverty_rate_change = change(adult_poverty_rate, original_adult_poverty_rate)
-    pwd_poverty_rate_change = change(pwd_poverty_rate, original_pwd_poverty_rate)
-    white_poverty_rate_change = change(white_poverty_rate, original_white_poverty_rate)
-    black_poverty_rate_change = change(black_poverty_rate, original_black_poverty_rate)
-    hispanic_poverty_rate_change = change(
+    child_poverty_rate_change = rel_change(
+        child_poverty_rate, original_child_poverty_rate
+    )
+    adult_poverty_rate_change = rel_change(
+        adult_poverty_rate, original_adult_poverty_rate
+    )
+    pwd_poverty_rate_change = rel_change(pwd_poverty_rate, original_pwd_poverty_rate)
+    white_poverty_rate_change = rel_change(
+        white_poverty_rate, original_white_poverty_rate
+    )
+    black_poverty_rate_change = rel_change(
+        black_poverty_rate, original_black_poverty_rate
+    )
+    hispanic_poverty_rate_change = rel_change(
         hispanic_poverty_rate, original_hispanic_poverty_rate
     )
-
-    # Round all numbers for display in hover
-    def hover_string(metric, round_by=1):
-        """formats 0.121 to 12.1%"""
-        string = str(round(metric * 100, round_by))
-        return string
 
     # TODO: use dictionaries instead of variable names
     # TODO move this near graph creation
@@ -770,16 +765,14 @@ def ubi(dropdown_state, level, agi_tax, benefits, taxes, include):
     black_poverty_rate_string = hover_string(black_poverty_rate)
     original_hispanic_poverty_rate_string = hover_string(original_hispanic_poverty_rate)
     hispanic_poverty_rate_string = hover_string(hispanic_poverty_rate)
-    # total poverty rate
+
+    # format original and new overall poverty rate
     original_poverty_rate_string = hover_string(original_poverty_rate)
     poverty_rate_string = hover_string(poverty_rate)
 
-    original_poverty_gap_billions = original_poverty_gap / 1e9
-    original_poverty_gap_billions = int(original_poverty_gap_billions)
-    original_poverty_gap_billions = "{:,}".format(original_poverty_gap_billions)
+    original_poverty_gap_billions = "{:,}".format(int(original_poverty_gap / 1e9))
 
-    poverty_gap_billions = int(poverty_gap / 1e9)
-    poverty_gap_billions = "{:,}".format(poverty_gap_billions)
+    poverty_gap_billions = "{:,}".format(int(poverty_gap / 1e9))
 
     original_gini_string = str(round(original_gini, 3))
     gini_string = str(round(gini, 3))
@@ -789,9 +782,7 @@ def ubi(dropdown_state, level, agi_tax, benefits, taxes, include):
     # Convert UBI and winners to string for title of chart
     ubi_string = str("{:,}".format(int(round(ubi_annual / 12))))
     winners_string = str(percent_winners)
-    change_pp = int(change_pp)
-    change_pp = "{:,}".format(change_pp)
-    resources_string = str(change_pp)
+    resources_string = "{:,}".format(int(change_pp))
 
     # populates Monthly UBI
     ubi_line = "Monthly UBI: $" + ubi_string
@@ -883,29 +874,30 @@ def ubi(dropdown_state, level, agi_tax, benefits, taxes, include):
 
     # Edit text and display the UBI amount and percent winners in title
     econ_fig.update_layout(
-        uniformtext_minsize=10, uniformtext_mode="hide", plot_bgcolor="white"
+        uniformtext_minsize=10,
+        uniformtext_mode="hide",
+        plot_bgcolor="white",
+        title_text="Economic overview",
+        title_x=0.5,
+        hoverlabel=dict(bgcolor="white", font_size=14, font_family="Roboto"),
+        yaxis_tickformat="%",
     )
     econ_fig.update_traces(texttemplate="%{text:.1%f}", textposition="auto")
-    econ_fig.update_layout(title_text="Economic overview", title_x=0.5)
 
     econ_fig.update_xaxes(
-        tickangle=0, title_text="", tickfont={"size": 14}, title_standoff=25
+        tickangle=0,
+        title_text="",
+        tickfont={"size": 14},
+        title_standoff=25,
+        title_font=dict(size=14, family="Roboto", color="black"),
     )
 
     econ_fig.update_yaxes(
         tickprefix="",
         tickfont={"size": 14},
         title_standoff=25,
+        title_font=dict(size=14, family="Roboto", color="black"),
     )
-
-    # TODO refactor
-    econ_fig.update_layout(
-        hoverlabel=dict(bgcolor="white", font_size=14, font_family="Roboto"),
-        yaxis_tickformat="%",
-    )
-
-    econ_fig.update_xaxes(title_font=dict(size=14, family="Roboto", color="black"))
-    econ_fig.update_yaxes(title_font=dict(size=14, family="Roboto", color="black"))
 
     # --------------------- populate poverty breakdown charts -------------------- #
 
@@ -918,15 +910,8 @@ def ubi(dropdown_state, level, agi_tax, benefits, taxes, include):
         "Hispanic",
     ]
 
-    # TODO refactor
-    breakdown_fig_cols = [
-        child_poverty_rate_change,
-        adult_poverty_rate_change,
-        pwd_poverty_rate_change,
-        white_poverty_rate_change,
-        black_poverty_rate_change,
-        hispanic_poverty_rate_change,
-    ]
+    breakdown_fig_cols = [pov_breakdowns["changes"][demog] for demog in demogs]
+    hovertemplate = [pov_breakdowns["strings"][demog] for demog in demogs]
 
     breakdown_fig = go.Figure(
         [
@@ -935,32 +920,7 @@ def ubi(dropdown_state, level, agi_tax, benefits, taxes, include):
                 y=breakdown_fig_cols,
                 text=breakdown_fig_cols,
                 # TODO either do the "%" in the hover_string() function or do it here
-                hovertemplate=[
-                    "Original child poverty rate: "
-                    + original_child_poverty_rate_string
-                    + "%<br><extra></extra>"
-                    "New child poverty rate: " + child_poverty_rate_string + "%",
-                    "Original adult poverty rate: "
-                    + original_adult_poverty_rate_string
-                    + "%<br><extra></extra>"
-                    "New adult poverty rate: " + adult_poverty_rate_string + "%",
-                    "Original pwd poverty rate: "
-                    + original_pwd_poverty_rate_string
-                    + "%<br><extra></extra>"
-                    "New pwd poverty rate: " + pwd_poverty_rate_string + "%",
-                    "Original White poverty rate: "
-                    + original_white_poverty_rate_string
-                    + "%<br><extra></extra>"
-                    "New White poverty rate: " + white_poverty_rate_string + "%",
-                    "Original Black poverty rate: "
-                    + original_black_poverty_rate_string
-                    + "%<br><extra></extra>"
-                    "New Black poverty rate: " + black_poverty_rate_string + "%",
-                    "Original Hispanic poverty rate: "
-                    + original_hispanic_poverty_rate_string
-                    + "%<br><extra></extra>"
-                    "New Hispanic poverty rate: " + hispanic_poverty_rate_string + "%",
-                ],
+                hovertemplate=hovertemplate,
                 marker_color=BLUE,
             )
         ]
