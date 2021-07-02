@@ -11,6 +11,9 @@ import microdf as mdf
 import os
 import us
 
+# ---------------------------------------------------------------------------- #
+#                       SECTION import pre-processed data                      #
+# ---------------------------------------------------------------------------- #
 # Import data from Ipums
 person = pd.read_csv("person.csv.gz")
 spmu = pd.read_csv("spmu.csv.gz")
@@ -27,24 +30,32 @@ states_no_us = person.state.unique().tolist()
 states_no_us.sort()
 states = ["US"] + states_no_us
 
+# ---------------------------------------------------------------------------- #
+#                            SECTION dash components                           #
+# ---------------------------------------------------------------------------- #
+def make_html_label(label_text):
+    """returns formatted html.Label instance for 4 input card bodies"""
+    return html.Label(
+        [label_text],
+        style={
+            "font-weight": "bold",
+            "text-align": "center",
+            "color": "white",
+            "fontSize": 20,
+        },
+    )
 
-# Create the 4 input cards
+
+# ----------------------- SECTION Create 4 input cards ----------------------- #
 cards = dbc.CardDeck(
     [
-        # define first card with state-dropdown component
+        # -------------- SECTION Card 1 state-dropdown component ------------- #
         dbc.Card(
             [
                 dbc.CardBody(
                     [
-                        html.Label(
-                            ["Select state:"],
-                            style={
-                                "font-weight": "bold",
-                                "text-align": "center",
-                                "color": "white",
-                                "fontSize": 20,
-                            },
-                        ),
+                        # TODO create function for the HTML labels, it repeats 6 times
+                        make_html_label("Select state:"),
                         dcc.Dropdown(
                             # define component_id for input of app@callback function
                             id="state-dropdown",
@@ -55,15 +66,7 @@ cards = dbc.CardDeck(
                             options=[{"label": x, "value": x} for x in states],
                         ),
                         html.Br(),
-                        html.Label(
-                            ["Reform level:"],
-                            style={
-                                "font-weight": "bold",
-                                "text-align": "center",
-                                "color": "white",
-                                "fontSize": 20,
-                            },
-                        ),
+                        make_html_label("Reform level:"),
                         dcc.RadioItems(
                             id="level",
                             options=[
@@ -79,7 +82,7 @@ cards = dbc.CardDeck(
             color="info",
             outline=False,
         ),
-        # second card -
+        # -------------------- SECTION Card 2 - taxes ------------------- #
         # tax slider
         #   allows user to repeal certain federal and state taxes
         #   component_id: "taxes-checklist"
@@ -91,15 +94,7 @@ cards = dbc.CardDeck(
                 dbc.CardBody(
                     [
                         # define attributes of taxes-checklist component
-                        html.Label(
-                            ["Repeal current taxes:"],
-                            style={
-                                "font-weight": "bold",
-                                "text-align": "center",
-                                "color": "white",
-                                "fontSize": 20,
-                            },
-                        ),
+                        make_html_label("Repeal current taxes:"),
                         html.Br(),
                         dcc.Checklist(
                             # define component id to be used in callback
@@ -116,15 +111,7 @@ cards = dbc.CardDeck(
                         ),
                         html.Br(),
                         # defines label/other HTML attributes of agi-slider component
-                        html.Label(
-                            ["Income tax rate"],
-                            style={
-                                "font-weight": "bold",
-                                "text-align": "center",
-                                "color": "white",
-                                "fontSize": 20,
-                            },
-                        ),
+                        make_html_label("Income tax rate:"),
                         dcc.Slider(
                             id="agi-slider",
                             min=0,
@@ -167,21 +154,14 @@ cards = dbc.CardDeck(
             color="info",
             outline=False,
         ),
+        # ----------------- SECTION Card 3 - Repeal Benefits ----------------- #
         # define third card where the repeal benefits checklist is displayed
         dbc.Card(
             [
                 dbc.CardBody(
                     [
                         # label the card
-                        html.Label(
-                            ["Repeal benefits:"],
-                            style={
-                                "font-weight": "bold",
-                                "text-align": "center",
-                                "color": "white",
-                                "fontSize": 20,
-                            },
-                        ),
+                        make_html_label("Repeal benefits:"),
                         # use  dash component to create checklist to choose
                         # which benefits to repeal
                         dcc.Checklist(
@@ -233,15 +213,7 @@ cards = dbc.CardDeck(
             [
                 dbc.CardBody(
                     [
-                        html.Label(
-                            ["Include in UBI:"],
-                            style={
-                                "font-weight": "bold",
-                                "text-align": "center",
-                                "color": "white",
-                                "fontSize": 20,
-                            },
-                        ),
+                        make_html_label("Include in UBI:"),
                         dcc.Checklist(
                             id="include-checklist",
                             options=[
@@ -269,7 +241,7 @@ cards = dbc.CardDeck(
     ]
 )
 
-
+# create the 2 cards the charts will go into
 charts = dbc.CardDeck(
     [
         dbc.Card(
@@ -284,60 +256,43 @@ charts = dbc.CardDeck(
         ),
     ]
 )
+# ------------------------------- summary card ------------------------------- #
+# create the summary card that contains ubi amount, revenue, pct. better off
+def make_div(div_id):
+    """assign html.Div to summary card"""
+    div = html.Div(
+        id=div_id,
+        style={
+            "text-align": "left",
+            "color": "black",
+            "fontSize": 25,
+        },
+    )
 
+    return div
+
+
+summary_outputs = [
+    "revenue-output",  # Funds for UBI
+    "ubi-population-output",  # UBI Population
+    "ubi-output",  # Monthly UBI
+    "winners-output",  # Percent better off
+    "resources-output",  # Average change in resources per person
+]
 
 text = (
     dbc.Card(
         [
-            dbc.CardBody(
-                [
-                    html.Div(
-                        id="ubi-output",
-                        style={
-                            "text-align": "left",
-                            "color": "black",
-                            "fontSize": 25,
-                        },
-                    ),
-                    html.Div(
-                        id="revenue-output",
-                        style={
-                            "text-align": "left",
-                            "color": "black",
-                            "fontSize": 25,
-                        },
-                    ),
-                    html.Div(
-                        id="ubi-population-output",
-                        style={
-                            "text-align": "left",
-                            "color": "black",
-                            "fontSize": 25,
-                        },
-                    ),
-                    html.Div(
-                        id="winners-output",
-                        style={
-                            "text-align": "left",
-                            "color": "black",
-                            "fontSize": 25,
-                        },
-                    ),
-                    html.Div(
-                        id="resources-output",
-                        style={
-                            "text-align": "left",
-                            "color": "black",
-                            "fontSize": 25,
-                        },
-                    ),
-                ]
-            ),
+            dbc.CardBody([make_div(x) for x in summary_outputs]),
         ],
         color="white",
         outline=False,
     ),
 )
+
+# ---------------------------------------------------------------------------- #
+#                                      SECTION app                                     #
+# ---------------------------------------------------------------------------- #
 
 # Get base pathname from an environment variable that CS will provide.
 url_base_pathname = os.environ.get("URL_BASE_PATHNAME", "/")
@@ -445,7 +400,9 @@ app.layout = html.Div(
     ]
 )
 
-# Assign callbacks
+# ---------------------------------------------------------------------------- #
+#                                   callbacks                                  #
+# ---------------------------------------------------------------------------- #
 
 
 @app.callback(
@@ -723,8 +680,50 @@ def ubi(dropdown_state, level, agi_tax, benefits, taxes, include):
 
     # TODO: use dictionaries instead of variable names
 
-    # breakdowns = {demog: {
-    # demog_original_poverty_rate, demog_povery_rate, demog_poverty_rate_change}}
+    demogs = ["child", "adult", "pwd", "white_non_hispanic", "black", "hispanic"]
+    # create dictionary for demographic breakdown of poverty rates
+    pov_breakdowns = {
+        "original_pov_rates": {
+            demog: return_demog(demog, "pov_rate") for demog in demogs
+        },
+        "new_pov_rates": {demog: pv_rate(demog) for demog in demogs},
+    }
+
+    # add poverty rate changes to dictionary
+    pov_breakdowns["pov_rate_changes"] = {
+        demog: change(
+            pov_breakdowns["new_pov_rates"][demog],
+            pov_breakdowns["original_pov_rates"][demog],
+        )
+        for demog in demogs
+    }
+    print(pov_breakdowns)
+    {
+        "original_pov_rates": {
+            "child": 0.1388868704262604,
+            "adult": 0.1245815309192201,
+            "pwd": 0.2026032882275905,
+            "white_non_hispanic": 0.0888199526653687,
+            "black": 0.2014309586205856,
+            "hispanic": 0.2014858439822594,
+        },
+        "new_pov_rates": {
+            "child": 0.10035410700845945,
+            "adult": 0.1025262560260807,
+            "pwd": 0.16418696517799683,
+            "white_non_hispanic": 0.07331087035130869,
+            "black": 0.15660758467611635,
+            "hispanic": 0.15498715114941644,
+        },
+        "pov_rate_changes": {
+            "child": -0.277,
+            "adult": -0.177,
+            "pwd": -0.19,
+            "white_non_hispanic": -0.175,
+            "black": -0.223,
+            "hispanic": -0.231,
+        },
+    }
 
     original_child_poverty_rate = return_demog("child", "pov_rate")
     original_adult_poverty_rate = return_demog("adult", "pov_rate")
@@ -757,9 +756,8 @@ def ubi(dropdown_state, level, agi_tax, benefits, taxes, include):
         return string
 
     # TODO: use dictionaries instead of variable names
-
-    original_poverty_rate_string = hover_string(original_poverty_rate)
-    poverty_rate_string = hover_string(poverty_rate)
+    # TODO move this near graph creation
+    # demographic poverty rate strings
     original_child_poverty_rate_string = hover_string(original_child_poverty_rate)
     child_poverty_rate_string = hover_string(child_poverty_rate)
     original_adult_poverty_rate_string = hover_string(original_adult_poverty_rate)
@@ -772,13 +770,15 @@ def ubi(dropdown_state, level, agi_tax, benefits, taxes, include):
     black_poverty_rate_string = hover_string(black_poverty_rate)
     original_hispanic_poverty_rate_string = hover_string(original_hispanic_poverty_rate)
     hispanic_poverty_rate_string = hover_string(hispanic_poverty_rate)
+    # total poverty rate
+    original_poverty_rate_string = hover_string(original_poverty_rate)
+    poverty_rate_string = hover_string(poverty_rate)
 
     original_poverty_gap_billions = original_poverty_gap / 1e9
     original_poverty_gap_billions = int(original_poverty_gap_billions)
     original_poverty_gap_billions = "{:,}".format(original_poverty_gap_billions)
 
-    poverty_gap_billions = poverty_gap / 1e9
-    poverty_gap_billions = int(poverty_gap_billions)
+    poverty_gap_billions = int(poverty_gap / 1e9)
     poverty_gap_billions = "{:,}".format(poverty_gap_billions)
 
     original_gini_string = str(round(original_gini, 3))
@@ -860,14 +860,17 @@ def ubi(dropdown_state, level, agi_tax, benefits, taxes, include):
                 y=econ_fig_cols,
                 text=econ_fig_cols,
                 hovertemplate=[
+                    # poverty rates
                     "Original poverty rate: "
                     + original_poverty_rate_string
                     + "%<br><extra></extra>"
                     "New poverty rate: " + poverty_rate_string + "%",
+                    # poverty gap
                     "Original poverty gap: $"
                     + original_poverty_gap_billions
                     + "B<br><extra></extra>"
                     "New poverty gap: $" + poverty_gap_billions + "B",
+                    # gini
                     "Original Gini index: <extra></extra>"
                     + original_gini_string
                     + "<br>New Gini index: "
@@ -895,6 +898,7 @@ def ubi(dropdown_state, level, agi_tax, benefits, taxes, include):
         title_standoff=25,
     )
 
+    # TODO refactor
     econ_fig.update_layout(
         hoverlabel=dict(bgcolor="white", font_size=14, font_family="Roboto"),
         yaxis_tickformat="%",
@@ -914,6 +918,7 @@ def ubi(dropdown_state, level, agi_tax, benefits, taxes, include):
         "Hispanic",
     ]
 
+    # TODO refactor
     breakdown_fig_cols = [
         child_poverty_rate_change,
         adult_poverty_rate_change,
@@ -929,6 +934,7 @@ def ubi(dropdown_state, level, agi_tax, benefits, taxes, include):
                 x=breakdown_fig_x_lab,
                 y=breakdown_fig_cols,
                 text=breakdown_fig_cols,
+                # TODO either do the "%" in the hover_string() function or do it here
                 hovertemplate=[
                     "Original child poverty rate: "
                     + original_child_poverty_rate_string
