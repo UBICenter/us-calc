@@ -291,7 +291,7 @@ text = (
 )
 
 # ---------------------------------------------------------------------------- #
-#                                      SECTION app                                     #
+#                              SECTION app                                     #
 # ---------------------------------------------------------------------------- #
 
 # Get base pathname from an environment variable that CS will provide.
@@ -401,7 +401,7 @@ app.layout = html.Div(
 )
 
 # ---------------------------------------------------------------------------- #
-#                                   callbacks                                  #
+#                           SECTION callbacks                                  #
 # ---------------------------------------------------------------------------- #
 
 
@@ -481,6 +481,7 @@ def ubi(dropdown_state, level, agi_tax, benefits, taxes, include):
         # Calculate the total UBI a spmu recieves based on exclusions
         spmu["numper_ubi"] = spmu.numper
 
+        # TODO make into linear equation on one line using array of some kind
         if "children" not in include:
             # subtract the number of children from the number of
             # people in spm unit receiving ubi benefit
@@ -499,7 +500,6 @@ def ubi(dropdown_state, level, agi_tax, benefits, taxes, include):
             spmu["numper_ubi"] += spmu.non_citizen_adult
 
         # Assign UBI
-        # TODO: add to outputs
         ubi_population = (spmu.numper_ubi * spmu.spmwt).sum()
         ubi_annual = revenue / ubi_population
         spmu["total_ubi"] = ubi_annual * spmu.numper_ubi
@@ -594,7 +594,7 @@ def ubi(dropdown_state, level, agi_tax, benefits, taxes, include):
         retrieve pre-processed data by demographic
         args:
             demog - string one of
-                ['person', 'adult', 'child', 'black', 'white_non_hispanic',
+                ['person', 'adult', 'child', 'black', 'white',
             'hispanic', 'pwd', 'non_citizen', 'non_citizen_adult',
             'non_citizen_child']
             metric - string, one of ['pov_rate', 'pop']
@@ -684,9 +684,7 @@ def ubi(dropdown_state, level, agi_tax, benefits, taxes, include):
         string = str(round(metric * 100, round_by)) + "%"
         return string
 
-    # TODO: use dictionaries instead of variable names
-    # TODO: change "white_non_hispanic" in pre-processing.py to "white"
-    demogs = ["child", "adult", "pwd", "white_non_hispanic", "black", "hispanic"]
+    demogs = ["child", "adult", "pwd", "white", "black", "hispanic"]
     # create dictionary for demographic breakdown of poverty rates
     pov_breakdowns = {
         # return precomputed baseline poverty rates
@@ -729,7 +727,7 @@ def ubi(dropdown_state, level, agi_tax, benefits, taxes, include):
     original_gini_string = str(round(original_gini, 3))
     gini_string = str(round(gini, 3))
 
-    # -------------------- populates "Results of your reform:" ------------------- #
+    # --------------SECTION populates "Results of your reform:" ------------ #
 
     # Convert UBI and winners to string for title of chart
     ubi_string = str("{:,}".format(int(round(ubi_annual / 12))))
@@ -791,7 +789,7 @@ def ubi(dropdown_state, level, agi_tax, benefits, taxes, include):
     winners_line = "Percent better off: " + winners_string + "%"
     resources_line = "Average change in resources per person: $" + resources_string
 
-    # ------------------- populate economic breakdown bar chart ------------------ #
+    # ---------- populate economic breakdown bar chart ------------- #
 
     # Create x-axis labels for each chart
     econ_fig_x_lab = ["Poverty rate", "Poverty gap", "Gini index"]
@@ -851,7 +849,7 @@ def ubi(dropdown_state, level, agi_tax, benefits, taxes, include):
         title_font=dict(size=14, family="Roboto", color="black"),
     )
 
-    # --------------------- populate poverty breakdown charts -------------------- #
+    # ------------------ populate poverty breakdown charts ---------------- #
 
     breakdown_fig_x_lab = [
         "Child",
