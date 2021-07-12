@@ -10,6 +10,8 @@ import dash_bootstrap_components as dbc
 import microdf as mdf
 import os
 import us
+import components as cmp
+from components import make_html_label, make_dropdown_options
 
 # ---------------------------------------------------------------------------- #
 #                       SECTION import pre-processed data                      #
@@ -33,17 +35,6 @@ states = ["US"] + states_no_us
 # ---------------------------------------------------------------------------- #
 #                            SECTION dash components                           #
 # ---------------------------------------------------------------------------- #
-def make_html_label(label_text):
-    """returns formatted html.Label instance for 4 input card bodies"""
-    return html.Label(
-        [label_text],
-        style={
-            "font-weight": "bold",
-            "text-align": "center",
-            "color": "white",
-            "fontSize": 20,
-        },
-    )
 
 
 # ----------------------- SECTION Create 4 input cards ----------------------- #
@@ -69,10 +60,9 @@ cards = dbc.CardDeck(
                         make_html_label("Reform level:"),
                         dcc.RadioItems(
                             id="level",
-                            options=[
-                                {"label": "Federal", "value": "federal"},
-                                {"label": "State", "value": "state"},
-                            ],
+                            options=make_dropdown_options(
+                                {"Federal": "federal", "State": "state"}
+                            ),
                             value="federal",
                             labelStyle={"display": "block"},
                         ),
@@ -170,34 +160,16 @@ cards = dbc.CardDeck(
                             id="benefits-checklist",
                             # 'options' here refers the selections available to the user in the
                             # checklist
-                            options=[
+                            options=make_dropdown_options(
                                 {
-                                    # label what user will see next to check box
-                                    "label": "  Child Tax Credit",
-                                    # to be used ________
-                                    "value": "ctc",
-                                },
-                                {
-                                    "label": "  Supplemental Security Income (SSI)",
-                                    "value": "incssi",
-                                },
-                                {
-                                    "label": "  SNAP (food stamps)",
-                                    "value": "spmsnap",
-                                },
-                                {
-                                    "label": "  Earned Income Tax Credit",
-                                    "value": "eitcred",
-                                },
-                                {
-                                    "label": "  Unemployment benefits",
-                                    "value": "incunemp",
-                                },
-                                {
-                                    "label": "  Energy subsidy (LIHEAP)",
-                                    "value": "spmheat",
-                                },
-                            ],
+                                    "  Child Tax Credit": "ctc",
+                                    "  Supplemental Security Income (SSI)": "incssi",
+                                    "  SNAP (food stamps)": "spmsnap",
+                                    "  Earned Income Tax Credit": "eitcred",
+                                    "  Unemployment benefits": "incunemp",
+                                    "  Energy subsidy (LIHEAP)": "spmheat",
+                                }
+                            ),
                             # do not repeal benefits by default
                             value=[],
                             labelStyle={"display": "block"},
@@ -216,14 +188,13 @@ cards = dbc.CardDeck(
                         make_html_label("Include in UBI:"),
                         dcc.Checklist(
                             id="include-checklist",
-                            options=[
+                            options=make_dropdown_options(
                                 {
-                                    "label": "non-Citizens",
-                                    "value": "non_citizens",
-                                },
-                                {"label": "Children", "value": "children"},
-                                {"label": "Adult", "value": "adults"},
-                            ],
+                                    "non-Citizens": "non_citizens",
+                                    "Children": "children",
+                                    "Adult": "adults",
+                                }
+                            ),
                             # specify checked items
                             value=[
                                 "adults",
@@ -420,6 +391,8 @@ app.layout = html.Div(
     Input(component_id="taxes-checklist", component_property="value"),
     Input(component_id="include-checklist", component_property="value"),
 )
+
+# TODO one function to translate args to params, another to run the function, another to return the output
 def ubi(dropdown_state, level, agi_tax, benefits, taxes, include):
     """this does everything from microsimulation to figure creation.
         Dash does something automatically where it takes the input arguments
