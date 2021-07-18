@@ -89,13 +89,12 @@ cards = dbc.CardDeck(
                         dcc.Checklist(
                             # define component id to be used in callback
                             id="taxes-checklist",
-                            options=[
-                                {"label": "Income taxes", "value": "fedtaxac"},
+                            options=make_dropdown_options(
                                 {
-                                    "label": "Employee side payroll",
-                                    "value": "fica",
-                                },
-                            ],
+                                    "Income taxes": "fedtaxac",
+                                    "Employee side payroll": "fica",
+                                }
+                            ),
                             value=[],
                             labelStyle={"display": "block"},
                         ),
@@ -279,18 +278,19 @@ app = dash.Dash(
     url_base_pathname=url_base_pathname,
 )
 
-server = app.server
+server = app.server  # the server object
 
 # Design the app
 app.layout = html.Div(
     [
-        # navbar
+        # navbar (top)
         dbc.Navbar(
             [
                 html.A(
                     dbc.Row(
                         [
                             dbc.Col(
+                                # insert logo
                                 html.Img(
                                     src="https://blog.ubicenter.org/_static/ubi_center_logo_wide_blue.png",
                                     height="30px",
@@ -298,6 +298,7 @@ app.layout = html.Div(
                             ),
                         ],
                         align="center",
+                        # gutters are used to separate the navbar items from the content area
                         no_gutters=True,
                     ),
                     href="https://www.ubicenter.org",
@@ -326,6 +327,7 @@ app.layout = html.Div(
             ]
         ),
         html.Br(),
+        # app description
         dbc.Row(
             [
                 dbc.Col(
@@ -359,9 +361,12 @@ app.layout = html.Div(
                 ),
             ]
         ),
+        # contains simulation results in text form
         dbc.Row([dbc.Col(text, width={"size": 6, "offset": 3})]),
         html.Br(),
+        # contains the graphs
         dbc.Row([dbc.Col(charts, width={"size": 10, "offset": 1})]),
+        # 6 line breaks at the end of the page to make it look nicer :)
         html.Br(),
         html.Br(),
         html.Br(),
@@ -393,12 +398,12 @@ app.layout = html.Div(
 )
 
 # TODO one function to translate args to params, another to run the function, another to return the output
-def ubi(dropdown_state, level, agi_tax, benefits, taxes, include):
+def ubi(state_dropdown, level, agi_tax, benefits, taxes, include):
     """this does everything from microsimulation to figure creation.
         Dash does something automatically where it takes the input arguments
         in the order given in the @app.callback decorator
     Args:
-        state:  takes input from callback input, component_id="state-dropdown"
+        state_dropdown:  takes input from callback input, component_id="state-dropdown"
         level:  component_id="level"
         agi_tax:  component_id="agi-slider"
         benefits:  component_id="benefits-checklist"
@@ -488,19 +493,19 @@ def ubi(dropdown_state, level, agi_tax, benefits, taxes, include):
         # INCLUDING those excluding form recieving ubi payments
 
         # state here refers to the selection from the drop down, not the reform level
-        if dropdown_state == "US":
+        if state_dropdown == "US":
             target_spmu = spmu
         else:
-            target_spmu = spmu[spmu.state == dropdown_state]
+            target_spmu = spmu[spmu.state == state_dropdown]
 
     # if the "Reform level" dropdown selected by the user is State
     if level == "state":
 
         # Sort by state
-        if dropdown_state == "US":
+        if state_dropdown == "US":
             target_spmu = spmu
         else:
-            target_spmu = spmu[spmu.state == dropdown_state]
+            target_spmu = spmu[spmu.state == state_dropdown]
 
         # Initialize
         target_spmu["new_resources"] = target_spmu.spmtotres
@@ -560,7 +565,7 @@ def ubi(dropdown_state, level, agi_tax, benefits, taxes, include):
     target_persons = person.merge(sub_spmu, on=["spmfamunit", "year"])
 
     # filter demog_stats for selected state from dropdown
-    baseline_demog = demog_stats[demog_stats.state == dropdown_state]
+    baseline_demog = demog_stats[demog_stats.state == state_dropdown]
 
     def return_demog(demog, metric):
         """
@@ -589,7 +594,7 @@ def ubi(dropdown_state, level, agi_tax, benefits, taxes, include):
     non_citizen_child_population = return_demog(demog="non_citizen_child", metric="pop")
 
     # filter all state stats gini, poverty_gap, etc. for dropdown state
-    baseline_all_state_stats = all_state_stats[all_state_stats.index == dropdown_state]
+    baseline_all_state_stats = all_state_stats[all_state_stats.index == state_dropdown]
 
     def return_all_state(metric):
         """filter baseline_all_state_stats and return value of select metric
@@ -717,8 +722,8 @@ def ubi(dropdown_state, level, agi_tax, benefits, taxes, include):
         revenue_line = "Funds for UBI: $" + str((revenue / 1e6).round(1)) + " M"
 
     # populates revenue for UBI
-    if dropdown_state != "US":
-        state_spmu = target_spmu[target_spmu.state == dropdown_state]
+    if state_dropdown != "US":
+        state_spmu = target_spmu[target_spmu.state == state_dropdown]
         state_ubi_population = (state_spmu.numper_ubi * state_spmu.spmwt).sum()
 
         if state_ubi_population > 1e6:
@@ -735,7 +740,7 @@ def ubi(dropdown_state, level, agi_tax, benefits, taxes, include):
         if state_revenue > 1e9:
             revenue_line = (
                 "Funds for UBI ("
-                + dropdown_state
+                + state_dropdown
                 + "): $"
                 + str((state_revenue / 1e9).round(1))
                 + " B"
@@ -743,7 +748,7 @@ def ubi(dropdown_state, level, agi_tax, benefits, taxes, include):
         else:
             revenue_line = (
                 "Funds for UBI ("
-                + dropdown_state
+                + state_dropdown
                 + "): $"
                 + str((state_revenue / 1e6).round(1))
                 + " M"
@@ -926,7 +931,9 @@ def update(checklist):
     Input("level", "value"),
 )
 def update(radio):
-
+    # update checklist options for benefits-checklist widget if level is state
+    # update radio options for
+    """update radio items for"""
     if "state" in radio:
         return [
             {"label": "  Child Tax Credit", "value": "ctc", "disabled": True},
@@ -975,6 +982,7 @@ def update(radio):
     Input("level", "value"),
 )
 def update(radio):
+    """update radio buttons for taxs if state selected"""
 
     if "state" in radio:
         return [
