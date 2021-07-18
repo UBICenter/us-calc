@@ -11,7 +11,7 @@ import microdf as mdf
 import os
 import us
 import components as cmp
-from components import make_html_label, make_dropdown_options
+from components import make_html_label, set_options
 
 # ---------------------------------------------------------------------------- #
 #                       SECTION import pre-processed data                      #
@@ -45,7 +45,6 @@ cards = dbc.CardDeck(
             [
                 dbc.CardBody(
                     [
-                        # TODO create function for the HTML labels, it repeats 6 times
                         make_html_label("Select state:"),
                         dcc.Dropdown(
                             # define component_id for input of app@callback function
@@ -60,7 +59,7 @@ cards = dbc.CardDeck(
                         make_html_label("Reform level:"),
                         dcc.RadioItems(
                             id="level",
-                            options=make_dropdown_options(
+                            options=set_options(
                                 {"Federal": "federal", "State": "state"}
                             ),
                             value="federal",
@@ -89,7 +88,7 @@ cards = dbc.CardDeck(
                         dcc.Checklist(
                             # define component id to be used in callback
                             id="taxes-checklist",
-                            options=make_dropdown_options(
+                            options=set_options(
                                 {
                                     "Income taxes": "fedtaxac",
                                     "Employee side payroll": "fica",
@@ -159,7 +158,7 @@ cards = dbc.CardDeck(
                             id="benefits-checklist",
                             # 'options' here refers the selections available to the user in the
                             # checklist
-                            options=make_dropdown_options(
+                            options=set_options(
                                 {
                                     "  Child Tax Credit": "ctc",
                                     "  Supplemental Security Income (SSI)": "incssi",
@@ -187,7 +186,7 @@ cards = dbc.CardDeck(
                         make_html_label("Include in UBI:"),
                         dcc.Checklist(
                             id="include-checklist",
-                            options=make_dropdown_options(
+                            options=set_options(
                                 {
                                     "non-Citizens": "non_citizens",
                                     "Children": "children",
@@ -253,7 +252,19 @@ SUMMARY_OUTPUTS = [
 text = (
     dbc.Card(
         [
-            dbc.CardBody([make_div(x) for x in summary_outputs]),
+            dbc.CardBody(
+                [
+                    html.Div(
+                        id=x,
+                        style={
+                            "text-align": "left",
+                            "color": "black",
+                            "fontSize": 25,
+                        },
+                    )
+                    for x in SUMMARY_OUTPUTS
+                ]
+            ),
         ],
         color="white",
         outline=False,
@@ -579,7 +590,7 @@ def ubi(state_dropdown, level, agi_tax, benefits, taxes, include):
         returns:
             value - float
         """
-
+        # NOTE: baseline_demog is a dataframe with global scope
         value = baseline_demog.loc[
             (baseline_demog["demog"] == demog) & (baseline_demog["metric"] == metric),
             "value",
@@ -662,12 +673,12 @@ def ubi(state_dropdown, level, agi_tax, benefits, taxes, include):
         string = str(round(metric * 100, round_by)) + "%"
         return string
 
-    demogs = ["child", "adult", "pwd", "white", "black", "hispanic"]
+    DEMOGS = ["child", "adult", "pwd", "white", "black", "hispanic"]
     # create dictionary for demographic breakdown of poverty rates
     pov_breakdowns = {
         # return precomputed baseline poverty rates
-        "original_rates": {demog: return_demog(demog, "pov_rate") for demog in demogs},
-        "new_rates": {demog: pv_rate(demog) for demog in demogs},
+        "original_rates": {demog: return_demog(demog, "pov_rate") for demog in DEMOGS},
+        "new_rates": {demog: pv_rate(demog) for demog in DEMOGS},
     }
 
     # add poverty rate changes to dictionary
@@ -677,7 +688,7 @@ def ubi(state_dropdown, level, agi_tax, benefits, taxes, include):
             pov_breakdowns["new_rates"][demog],
             pov_breakdowns["original_rates"][demog],
         )
-        for demog in demogs
+        for demog in DEMOGS
     }
 
     # create string for hover template
@@ -691,7 +702,7 @@ def ubi(state_dropdown, level, agi_tax, benefits, taxes, include):
         + demog
         + " povery rate: "
         + hover_string(pov_breakdowns["new_rates"][demog])
-        for demog in demogs
+        for demog in DEMOGS
     }
 
     # format original and new overall poverty rate
@@ -838,8 +849,8 @@ def ubi(state_dropdown, level, agi_tax, benefits, taxes, include):
         "Hispanic",
     ]
 
-    breakdown_fig_cols = [pov_breakdowns["changes"][demog] for demog in demogs]
-    hovertemplate = [pov_breakdowns["strings"][demog] for demog in demogs]
+    breakdown_fig_cols = [pov_breakdowns["changes"][demog] for demog in DEMOGS]
+    hovertemplate = [pov_breakdowns["strings"][demog] for demog in DEMOGS]
 
     breakdown_fig = go.Figure(
         [

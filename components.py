@@ -22,10 +22,12 @@ def make_html_label(label_text):
     )
 
 
-def make_dropdown_options(label_value_dict):
-    """returns a list of options for dropdown menu
+def set_options(label_value_dict):
+    """returns a list of options for dropdown/checklist/radio inputs
     Args
-        dict: dictionary of label : value pairs for dropdown menu
+        dict: dictionary of {label : value} pairs for inputs
+        NOTE: values must be strings. labels are visible to user, values
+        are referenced by the component_id in the app.callback() function
     Returns
     -------
     list

@@ -7,4 +7,3 @@ numpy
 dash_bootstrap_components
 git+git://github.com/PSLmodels/microdf.git#egg=microdf
 gunicorn
-us
