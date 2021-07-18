@@ -854,6 +854,23 @@ def ubi(state_dropdown, level, agi_tax, benefits, taxes, include):
         title_font=dict(size=14, family="Roboto", color="black"),
     )
 
+    # set both y-axes to the same range
+    full_econ_fig = econ_fig.full_figure_for_development(warn=False)
+    full_breakdown_fig = breakdown_fig.full_figure_for_development(warn=False)
+    # find the minimum of both y-axes
+    global_ymin = min(
+        min(full_econ_fig.layout.yaxis.range),
+        min(full_breakdown_fig.layout.yaxis.range),
+    )
+    global_ymax = max(
+        max(full_econ_fig.layout.yaxis.range),
+        max(full_breakdown_fig.layout.yaxis.range),
+    )
+
+    # update the yaxes of the figure to account for both ends of the ranges
+    econ_fig.update_yaxes(dict(range=[global_ymin, global_ymax], autorange=False))
+    breakdown_fig.update_yaxes(dict(range=[global_ymin, global_ymax], autorange=False))
+
     return (
         ubi_line,
         revenue_line,
