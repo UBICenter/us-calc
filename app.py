@@ -10,7 +10,7 @@ import dash_bootstrap_components as dbc
 import microdf as mdf
 import os
 import us
-import components as cmp
+from numerize import numerize
 from components import make_html_label, set_options
 
 # ---------------------------------------------------------------------------- #
@@ -214,12 +214,12 @@ cards = dbc.CardDeck(
 charts = dbc.CardDeck(
     [
         dbc.Card(
-            dcc.Graph(id="my-graph", figure={}),
+            dcc.Graph(id="econ-graph", figure={}),
             body=True,
             color="info",
         ),
         dbc.Card(
-            dcc.Graph(id="my-graph2", figure={}),
+            dcc.Graph(id="breakdown-graph", figure={}),
             body=True,
             color="info",
         ),
@@ -227,20 +227,6 @@ charts = dbc.CardDeck(
 )
 # ------------------------------- summary card ------------------------------- #
 # create the summary card that contains ubi amount, revenue, pct. better off
-def make_div(div_id):
-    """assign html.Div to summary card"""
-    div = html.Div(
-        id=div_id,
-        style={
-            "text-align": "left",
-            "color": "black",
-            "fontSize": 25,
-        },
-    )
-
-    return div
-
-
 SUMMARY_OUTPUTS = [
     "revenue-output",  # Funds for UBI
     "ubi-population-output",  # UBI Population
@@ -398,8 +384,8 @@ app.layout = html.Div(
     Output(component_id="ubi-population-output", component_property="children"),
     Output(component_id="winners-output", component_property="children"),
     Output(component_id="resources-output", component_property="children"),
-    Output(component_id="my-graph", component_property="figure"),
-    Output(component_id="my-graph2", component_property="figure"),
+    Output(component_id="econ-graph", component_property="figure"),
+    Output(component_id="breakdown-graph", component_property="figure"),
     Input(component_id="state-dropdown", component_property="value"),
     Input(component_id="level", component_property="value"),
     Input(component_id="agi-slider", component_property="value"),
@@ -427,8 +413,8 @@ def ubi(state_dropdown, level, agi_tax, benefits, taxes, include):
         ubi_population_line: outputs to "revenue-output" in @app.callback
         winners_line: outputs to "winners-output" in @app.callback
         resources_line: outputs to "resources-output" in @app.callback
-        fig: outputs to "my-graph" in @app.callback
-        fig2: outputs to "my-graph2" in @app.callback
+        fig: outputs to "econ-graph" in @app.callback
+        fig2: outputs to "breakdown-graph" in @app.callback
     """
 
     # -------------------- calculations based on reform level -------------------- #
@@ -578,6 +564,7 @@ def ubi(state_dropdown, level, agi_tax, benefits, taxes, include):
     # filter demog_stats for selected state from dropdown
     baseline_demog = demog_stats[demog_stats.state == state_dropdown]
 
+    # TODO: return dictionary of results instead of return each variable
     def return_demog(demog, metric):
         """
         retrieve pre-processed data by demographic
@@ -720,63 +707,40 @@ def ubi(state_dropdown, level, agi_tax, benefits, taxes, include):
 
     # Convert UBI and winners to string for title of chart
     ubi_string = str("{:,}".format(int(round(ubi_annual / 12))))
-    winners_string = str(percent_winners)
-    resources_string = "{:,}".format(int(change_pp))
 
     # populates Monthly UBI
     ubi_line = "Monthly UBI: $" + ubi_string
 
     # populates 'Funds for UBI'
-    if revenue > 1e9:
-        revenue_line = "Funds for UBI: $" + str((revenue / 1e9).round(1)) + " B"
-    else:
-        revenue_line = "Funds for UBI: $" + str((revenue / 1e6).round(1)) + " M"
+    revenue_line = "Funds for UBI: $" + numerize.numerize(revenue, 1)
 
-    # populates revenue for UBI
+    # populates population and revenue for UBI if state selected from dropdown
     if state_dropdown != "US":
+        # filter for selected state
         state_spmu = target_spmu[target_spmu.state == state_dropdown]
+        # calculate population of state recieving UBI
         state_ubi_population = (state_spmu.numper_ubi * state_spmu.spmwt).sum()
 
-        if state_ubi_population > 1e6:
-            ubi_population_line = (
-                "UBI Population: " + str((state_ubi_population / 1e6).round(1)) + " M"
-            )
-        else:
-            ubi_population_line = (
-                "UBI Population: " + str((state_ubi_population / 1e3).round(1)) + " K"
-            )
+        ubi_population_line = "UBI Population: " + numerize.numerize(
+            state_ubi_population, 1
+        )
 
         state_revenue = ubi_annual * state_ubi_population
 
-        if state_revenue > 1e9:
-            revenue_line = (
-                "Funds for UBI ("
-                + state_dropdown
-                + "): $"
-                + str((state_revenue / 1e9).round(1))
-                + " B"
-            )
-        else:
-            revenue_line = (
-                "Funds for UBI ("
-                + state_dropdown
-                + "): $"
-                + str((state_revenue / 1e6).round(1))
-                + " M"
-            )
+        revenue_line = (
+            "Funds for UBI ("
+            + state_dropdown
+            + "): $"
+            + numerize.numerize(state_revenue, 1)
+        )
 
     else:
-        if ubi_population > 1e6:
-            ubi_population_line = (
-                "UBI Population: " + str((ubi_population / 1e6).round(1)) + " M"
-            )
-        else:
-            ubi_population_line = (
-                "UBI Population: " + str((ubi_population / 1e3).round(1)) + " K"
-            )
+        ubi_population_line = "UBI Population: " + numerize.numerize(ubi_population, 1)
 
-    winners_line = "Percent better off: " + winners_string + "%"
-    resources_line = "Average change in resources per person: $" + resources_string
+    winners_line = "Percent better off: " + str(percent_winners) + "%"
+    resources_line = "Average change in resources per person: $" + "{:,}".format(
+        int(change_pp)
+    )
 
     # ---------- populate economic breakdown bar chart ------------- #
 

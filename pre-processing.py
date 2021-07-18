@@ -130,9 +130,6 @@ DEMOG_COLS = [
     "white",
     "hispanic",
     "pwd",
-    "non_citizen",
-    "non_citizen_adult",
-    "non_citizen_child",
 ]
 
 poor_pop = person[person.poor]

@@ -2,3 +2,7 @@ venv
 *.pyc
 .env
 .DS_Store
+# ignore files use to write paper
+*.xlsx
+*.png
+*.docx

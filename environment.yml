@@ -12,4 +12,5 @@ dependencies:
   - pip:
       - jupyter-book
       - us
+      - numerize
       - "git+https://github.com/PSLmodels/microdf"
