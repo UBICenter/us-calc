@@ -272,7 +272,7 @@ def make_div(div_id):
     return div
 
 
-summary_outputs = [
+SUMMARY_OUTPUTS = [
     "revenue-output",  # Funds for UBI
     "ubi-population-output",  # UBI Population
     "ubi-output",  # Monthly UBI
