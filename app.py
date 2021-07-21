@@ -315,10 +315,25 @@ app.layout = html.Div(
             [
                 dbc.Col(
                     html.H4(
-                        "Use the interactive below to explore different funding mechanisms for a UBI and their impact. You may choose between repealing benefits or adding new taxes.  When a benefit is repealed or a new tax is added, the new revenue automatically funds a UBI to all people equally to ensure each plan is budget neutral.",
+                        "Fund a universal basic income by adding taxes, replacing taxes, and/or repealing benefits",
                         style={
-                            "text-align": "left",
-                            "color": "black",
+                            "text-align": "center",
+                            "color": "#212121",
+                            "fontSize": 25,
+                        },
+                    ),
+                    width={"size": 8, "offset": 2},
+                ),
+            ]
+        ),
+        dbc.Row(
+            [
+                dbc.Col(
+                    html.H4(
+                        "Any surplus is shared equally across all eligible recipients",
+                        style={
+                            "text-align": "center",
+                            "color": "#212121",
                             "fontSize": 25,
                         },
                     ),
@@ -769,7 +784,7 @@ def ubi(state_dropdown, level, agi_tax, benefits, taxes, include):
         # calculate population of state recieving UBI
         state_ubi_population = (state_spmu.numper_ubi * state_spmu.spmwt).sum()
 
-        ubi_population_line = "UBI Population: " + numerize.numerize(
+        ubi_population_line = "UBI population: " + numerize.numerize(
             state_ubi_population, 1
         )
 
