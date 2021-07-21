@@ -631,11 +631,7 @@ def ubi(state_dropdown, level, agi_tax, benefits, taxes, include):
 
     # filter all state stats gini, poverty_gap, etc. for dropdown state
     baseline_all_state_stats = all_state_stats[
-<<<<<<< HEAD
         all_state_stats.index == state_dropdown
-=======
-        all_state_stats.index == dropdown_state
->>>>>>> upstream/main
     ]
 
     def return_all_state(metric):
