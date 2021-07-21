@@ -798,7 +798,7 @@ def ubi(state_dropdown, level, agi_tax, benefits, taxes, include):
         )
 
     else:
-        ubi_population_line = "UBI Population: " + numerize.numerize(
+        ubi_population_line = "UBI population: " + numerize.numerize(
             ubi_population, 1
         )
 
