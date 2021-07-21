@@ -445,7 +445,7 @@ app.layout = html.Div(
             [
                 dbc.Col(
                     html.H4(
-                        "Source: 2019 Current Population Survey March Supplement. This dataset is known to underestimate benefit receipt and high incomes. No behavioral responses are assumed.",
+                        "Source: 2017-2019 Current Population Survey March Supplement. This dataset is known to underestimate benefit receipt and high incomes. No behavioral responses are assumed.",
                         style={
                             "text-align": "left",
                             "color": "gray",
