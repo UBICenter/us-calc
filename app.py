@@ -141,18 +141,10 @@ cards = dbc.CardDeck(
                                     "label": "0%",
                                     "style": {"color": "#F8F8FF"},
                                 },
-                                10: {
-                                    "style": {"color": "#F8F8FF"},
-                                },
-                                20: {
-                                    "style": {"color": "#F8F8FF"},
-                                },
-                                30: {
-                                    "style": {"color": "#F8F8FF"},
-                                },
-                                40: {
-                                    "style": {"color": "#F8F8FF"},
-                                },
+                                10: {"style": {"color": "#F8F8FF"},},
+                                20: {"style": {"color": "#F8F8FF"},},
+                                30: {"style": {"color": "#F8F8FF"},},
+                                40: {"style": {"color": "#F8F8FF"},},
                                 50: {
                                     "label": "50%",
                                     "style": {"color": "#F8F8FF"},
@@ -253,11 +245,7 @@ cards = dbc.CardDeck(
                                 {"label": "Adult", "value": "adults"},
                             ],
                             # specify checked items
-                            value=[
-                                "adults",
-                                "children",
-                                "non_citizens",
-                            ],
+                            value=["adults", "children", "non_citizens",],
                             labelStyle={"display": "block"},
                         ),
                     ]
@@ -273,14 +261,10 @@ cards = dbc.CardDeck(
 charts = dbc.CardDeck(
     [
         dbc.Card(
-            dcc.Graph(id="my-graph", figure={}),
-            body=True,
-            color="info",
+            dcc.Graph(id="my-graph", figure={}), body=True, color="info",
         ),
         dbc.Card(
-            dcc.Graph(id="my-graph2", figure={}),
-            body=True,
-            color="info",
+            dcc.Graph(id="my-graph2", figure={}), body=True, color="info",
         ),
     ]
 )
@@ -445,7 +429,38 @@ app.layout = html.Div(
             [
                 dbc.Col(
                     html.H4(
-                        "Source: 2017-2019 Current Population Survey March Supplement. This dataset is known to underestimate benefit receipt and high incomes. No behavioral responses are assumed.",
+                        [
+                            "Source: 2017-2019 Current Population Survey March Supplement. ",
+                            "This dataset is known to underestimate benefit receipt and high incomes. ",
+                            "No behavioral responses are assumed. ",
+                        ],
+                        style={
+                            "text-align": "left",
+                            "color": "gray",
+                            "fontSize": 12,
+                        },
+                    ),
+                    width={"size": 8, "offset": 2},
+                ),
+            ]
+        ),
+        dbc.Row(
+            [
+                dbc.Col(
+                    html.H4(
+                        [
+                            "Questions or feedback? ",
+                            "Email ",
+                            html.A(
+                                "contact@ubicenter.org",
+                                href="mailto:contact@ubicenter.org",
+                            ),
+                            " or file an issue at ",
+                            html.A(
+                                "github.com/UBICenter/us-calc/issues",
+                                href="http://github.com/UBICenter/us-calc/issues",
+                            ),
+                        ],
                         style={
                             "text-align": "left",
                             "color": "gray",
@@ -458,7 +473,7 @@ app.layout = html.Div(
         ),
         html.Br(),
         html.Br(),
-   ]
+    ]
 )
 
 # Assign callbacks
@@ -467,7 +482,9 @@ app.layout = html.Div(
 @app.callback(
     Output(component_id="ubi-output", component_property="children"),
     Output(component_id="revenue-output", component_property="children"),
-    Output(component_id="ubi-population-output", component_property="children"),
+    Output(
+        component_id="ubi-population-output", component_property="children"
+    ),
     Output(component_id="winners-output", component_property="children"),
     Output(component_id="resources-output", component_property="children"),
     Output(component_id="my-graph", component_property="figure"),
@@ -662,7 +679,8 @@ def ubi(dropdown_state, level, agi_tax, benefits, taxes, include):
         """
 
         value = baseline_demog.loc[
-            (baseline_demog["demog"] == demog) & (baseline_demog["metric"] == metric),
+            (baseline_demog["demog"] == demog)
+            & (baseline_demog["metric"] == metric),
             "value",
             # NOTE: returns the first value as a float, be careful if you redefine baseline_demog
         ].values[0]
@@ -672,10 +690,14 @@ def ubi(dropdown_state, level, agi_tax, benefits, taxes, include):
     population = return_demog(demog="person", metric="pop")
     child_population = return_demog(demog="child", metric="pop")
     non_citizen_population = return_demog(demog="non_citizen", metric="pop")
-    non_citizen_child_population = return_demog(demog="non_citizen_child", metric="pop")
+    non_citizen_child_population = return_demog(
+        demog="non_citizen_child", metric="pop"
+    )
 
     # filter all state stats gini, poverty_gap, etc. for dropdown state
-    baseline_all_state_stats = all_state_stats[all_state_stats.index == dropdown_state]
+    baseline_all_state_stats = all_state_stats[
+        all_state_stats.index == dropdown_state
+    ]
 
     def return_all_state(metric):
         """filter baseline_all_state_stats and return value of select metric
@@ -716,7 +738,9 @@ def ubi(dropdown_state, level, agi_tax, benefits, taxes, include):
     poverty_gap_change = change(poverty_gap, original_poverty_gap)
 
     # Calculate the change in poverty rate
-    target_persons["poor"] = target_persons.new_resources < target_persons.spmthresh
+    target_persons["poor"] = (
+        target_persons.new_resources < target_persons.spmthresh
+    )
     total_poor = (target_persons.poor * target_persons.asecwt).sum()
     poverty_rate = total_poor / population
     poverty_rate_change = change(poverty_rate, original_poverty_rate)
@@ -726,7 +750,9 @@ def ubi(dropdown_state, level, agi_tax, benefits, taxes, include):
     gini_change = change(gini, original_gini, 3)
 
     # Calculate percent winners
-    target_persons["winner"] = target_persons.new_resources > target_persons.spmtotres
+    target_persons["winner"] = (
+        target_persons.new_resources > target_persons.spmtotres
+    )
     total_winners = (target_persons.winner * target_persons.asecwt).sum()
     percent_winners = (total_winners / population * 100).round(1)
 
@@ -745,7 +771,9 @@ def ubi(dropdown_state, level, agi_tax, benefits, taxes, include):
     original_child_poverty_rate = return_demog("child", "pov_rate")
     original_adult_poverty_rate = return_demog("adult", "pov_rate")
     original_pwd_poverty_rate = return_demog("pwd", "pov_rate")
-    original_white_poverty_rate = return_demog("white_non_hispanic", "pov_rate")
+    original_white_poverty_rate = return_demog(
+        "white_non_hispanic", "pov_rate"
+    )
     original_black_poverty_rate = return_demog("black", "pov_rate")
     original_hispanic_poverty_rate = return_demog("hispanic", "pov_rate")
 
@@ -757,11 +785,21 @@ def ubi(dropdown_state, level, agi_tax, benefits, taxes, include):
     hispanic_poverty_rate = pv_rate("hispanic")
 
     # Calculate the percent change in poverty rate for each demographic
-    child_poverty_rate_change = change(child_poverty_rate, original_child_poverty_rate)
-    adult_poverty_rate_change = change(adult_poverty_rate, original_adult_poverty_rate)
-    pwd_poverty_rate_change = change(pwd_poverty_rate, original_pwd_poverty_rate)
-    white_poverty_rate_change = change(white_poverty_rate, original_white_poverty_rate)
-    black_poverty_rate_change = change(black_poverty_rate, original_black_poverty_rate)
+    child_poverty_rate_change = change(
+        child_poverty_rate, original_child_poverty_rate
+    )
+    adult_poverty_rate_change = change(
+        adult_poverty_rate, original_adult_poverty_rate
+    )
+    pwd_poverty_rate_change = change(
+        pwd_poverty_rate, original_pwd_poverty_rate
+    )
+    white_poverty_rate_change = change(
+        white_poverty_rate, original_white_poverty_rate
+    )
+    black_poverty_rate_change = change(
+        black_poverty_rate, original_black_poverty_rate
+    )
     hispanic_poverty_rate_change = change(
         hispanic_poverty_rate, original_hispanic_poverty_rate
     )
@@ -776,22 +814,34 @@ def ubi(dropdown_state, level, agi_tax, benefits, taxes, include):
 
     original_poverty_rate_string = hover_string(original_poverty_rate)
     poverty_rate_string = hover_string(poverty_rate)
-    original_child_poverty_rate_string = hover_string(original_child_poverty_rate)
+    original_child_poverty_rate_string = hover_string(
+        original_child_poverty_rate
+    )
     child_poverty_rate_string = hover_string(child_poverty_rate)
-    original_adult_poverty_rate_string = hover_string(original_adult_poverty_rate)
+    original_adult_poverty_rate_string = hover_string(
+        original_adult_poverty_rate
+    )
     adult_poverty_rate_string = hover_string(adult_poverty_rate)
     original_pwd_poverty_rate_string = hover_string(original_pwd_poverty_rate)
     pwd_poverty_rate_string = hover_string(pwd_poverty_rate)
-    original_white_poverty_rate_string = hover_string(original_white_poverty_rate)
+    original_white_poverty_rate_string = hover_string(
+        original_white_poverty_rate
+    )
     white_poverty_rate_string = hover_string(white_poverty_rate)
-    original_black_poverty_rate_string = hover_string(original_black_poverty_rate)
+    original_black_poverty_rate_string = hover_string(
+        original_black_poverty_rate
+    )
     black_poverty_rate_string = hover_string(black_poverty_rate)
-    original_hispanic_poverty_rate_string = hover_string(original_hispanic_poverty_rate)
+    original_hispanic_poverty_rate_string = hover_string(
+        original_hispanic_poverty_rate
+    )
     hispanic_poverty_rate_string = hover_string(hispanic_poverty_rate)
 
     original_poverty_gap_billions = original_poverty_gap / 1e9
     original_poverty_gap_billions = int(original_poverty_gap_billions)
-    original_poverty_gap_billions = "{:,}".format(original_poverty_gap_billions)
+    original_poverty_gap_billions = "{:,}".format(
+        original_poverty_gap_billions
+    )
 
     poverty_gap_billions = poverty_gap / 1e9
     poverty_gap_billions = int(poverty_gap_billions)
@@ -814,9 +864,13 @@ def ubi(dropdown_state, level, agi_tax, benefits, taxes, include):
 
     # populates 'Funds for UBI'
     if revenue > 1e9:
-        revenue_line = "Funds for UBI: $" + str((revenue / 1e9).round(1)) + " B"
+        revenue_line = (
+            "Funds for UBI: $" + str((revenue / 1e9).round(1)) + " B"
+        )
     else:
-        revenue_line = "Funds for UBI: $" + str((revenue / 1e6).round(1)) + " M"
+        revenue_line = (
+            "Funds for UBI: $" + str((revenue / 1e6).round(1)) + " M"
+        )
 
     # populates revenue for UBI
     if dropdown_state != "US":
@@ -825,11 +879,15 @@ def ubi(dropdown_state, level, agi_tax, benefits, taxes, include):
 
         if state_ubi_population > 1e6:
             ubi_population_line = (
-                "UBI Population: " + str((state_ubi_population / 1e6).round(1)) + " M"
+                "UBI Population: "
+                + str((state_ubi_population / 1e6).round(1))
+                + " M"
             )
         else:
             ubi_population_line = (
-                "UBI Population: " + str((state_ubi_population / 1e3).round(1)) + " K"
+                "UBI Population: "
+                + str((state_ubi_population / 1e3).round(1))
+                + " K"
             )
 
         state_revenue = ubi_annual * state_ubi_population
@@ -854,15 +912,21 @@ def ubi(dropdown_state, level, agi_tax, benefits, taxes, include):
     else:
         if ubi_population > 1e6:
             ubi_population_line = (
-                "UBI Population: " + str((ubi_population / 1e6).round(1)) + " M"
+                "UBI Population: "
+                + str((ubi_population / 1e6).round(1))
+                + " M"
             )
         else:
             ubi_population_line = (
-                "UBI Population: " + str((ubi_population / 1e3).round(1)) + " K"
+                "UBI Population: "
+                + str((ubi_population / 1e3).round(1))
+                + " K"
             )
 
     winners_line = "Percent better off: " + winners_string + "%"
-    resources_line = "Average change in resources per person: $" + resources_string
+    resources_line = (
+        "Average change in resources per person: $" + resources_string
+    )
 
     # ------------------- populate economic breakdown bar chart ------------------ #
 
@@ -906,9 +970,7 @@ def ubi(dropdown_state, level, agi_tax, benefits, taxes, include):
     )
 
     econ_fig.update_yaxes(
-        tickprefix="",
-        tickfont={"size": 14},
-        title_standoff=25,
+        tickprefix="", tickfont={"size": 14}, title_standoff=25,
     )
 
     econ_fig.update_layout(
@@ -916,8 +978,12 @@ def ubi(dropdown_state, level, agi_tax, benefits, taxes, include):
         yaxis_tickformat="%",
     )
 
-    econ_fig.update_xaxes(title_font=dict(size=14, family="Roboto", color="black"))
-    econ_fig.update_yaxes(title_font=dict(size=14, family="Roboto", color="black"))
+    econ_fig.update_xaxes(
+        title_font=dict(size=14, family="Roboto", color="black")
+    )
+    econ_fig.update_yaxes(
+        title_font=dict(size=14, family="Roboto", color="black")
+    )
 
     # --------------------- populate poverty breakdown charts -------------------- #
 
@@ -949,11 +1015,15 @@ def ubi(dropdown_state, level, agi_tax, benefits, taxes, include):
                     "Original child poverty rate: "
                     + original_child_poverty_rate_string
                     + "%<br><extra></extra>"
-                    "New child poverty rate: " + child_poverty_rate_string + "%",
+                    "New child poverty rate: "
+                    + child_poverty_rate_string
+                    + "%",
                     "Original adult poverty rate: "
                     + original_adult_poverty_rate_string
                     + "%<br><extra></extra>"
-                    "New adult poverty rate: " + adult_poverty_rate_string + "%",
+                    "New adult poverty rate: "
+                    + adult_poverty_rate_string
+                    + "%",
                     "Original pwd poverty rate: "
                     + original_pwd_poverty_rate_string
                     + "%<br><extra></extra>"
@@ -961,15 +1031,21 @@ def ubi(dropdown_state, level, agi_tax, benefits, taxes, include):
                     "Original White poverty rate: "
                     + original_white_poverty_rate_string
                     + "%<br><extra></extra>"
-                    "New White poverty rate: " + white_poverty_rate_string + "%",
+                    "New White poverty rate: "
+                    + white_poverty_rate_string
+                    + "%",
                     "Original Black poverty rate: "
                     + original_black_poverty_rate_string
                     + "%<br><extra></extra>"
-                    "New Black poverty rate: " + black_poverty_rate_string + "%",
+                    "New Black poverty rate: "
+                    + black_poverty_rate_string
+                    + "%",
                     "Original Hispanic poverty rate: "
                     + original_hispanic_poverty_rate_string
                     + "%<br><extra></extra>"
-                    "New Hispanic poverty rate: " + hispanic_poverty_rate_string + "%",
+                    "New Hispanic poverty rate: "
+                    + hispanic_poverty_rate_string
+                    + "%",
                 ],
                 marker_color=BLUE,
             )
@@ -979,17 +1055,19 @@ def ubi(dropdown_state, level, agi_tax, benefits, taxes, include):
     breakdown_fig.update_layout(
         uniformtext_minsize=10, uniformtext_mode="hide", plot_bgcolor="white"
     )
-    breakdown_fig.update_traces(texttemplate="%{text:.1%f}", textposition="auto")
-    breakdown_fig.update_layout(title_text="Poverty rate breakdown", title_x=0.5)
+    breakdown_fig.update_traces(
+        texttemplate="%{text:.1%f}", textposition="auto"
+    )
+    breakdown_fig.update_layout(
+        title_text="Poverty rate breakdown", title_x=0.5
+    )
 
     breakdown_fig.update_xaxes(
         tickangle=0, title_text="", tickfont={"size": 14}, title_standoff=25
     )
 
     breakdown_fig.update_yaxes(
-        tickprefix="",
-        tickfont={"size": 14},
-        title_standoff=25,
+        tickprefix="", tickfont={"size": 14}, title_standoff=25,
     )
 
     breakdown_fig.update_layout(
@@ -997,8 +1075,12 @@ def ubi(dropdown_state, level, agi_tax, benefits, taxes, include):
         yaxis_tickformat="%",
     )
 
-    breakdown_fig.update_xaxes(title_font=dict(size=14, family="Roboto", color="black"))
-    breakdown_fig.update_yaxes(title_font=dict(size=14, family="Roboto", color="black"))
+    breakdown_fig.update_xaxes(
+        title_font=dict(size=14, family="Roboto", color="black")
+    )
+    breakdown_fig.update_yaxes(
+        title_font=dict(size=14, family="Roboto", color="black")
+    )
 
     return (
         ubi_line,
@@ -1048,8 +1130,7 @@ def update(checklist):
 
 
 @app.callback(
-    Output("benefits-checklist", "options"),
-    Input("level", "value"),
+    Output("benefits-checklist", "options"), Input("level", "value"),
 )
 def update(radio):
 
@@ -1097,8 +1178,7 @@ def update(radio):
 
 
 @app.callback(
-    Output("taxes-checklist", "options"),
-    Input("level", "value"),
+    Output("taxes-checklist", "options"), Input("level", "value"),
 )
 def update(radio):
 
