@@ -385,7 +385,7 @@ app.layout = html.Div(
             [
                 dbc.Col(
                     html.H1(
-                        "Explore funding mechanisms of UBI",
+                        "Basic Income Builder",
                         id="header",
                         style={
                             "text-align": "center",
@@ -441,8 +441,24 @@ app.layout = html.Div(
         html.Br(),
         html.Br(),
         html.Br(),
+        dbc.Row(
+            [
+                dbc.Col(
+                    html.H4(
+                        "Source: 2017-2019 Current Population Survey March Supplement. This dataset is known to underestimate benefit receipt and high incomes. No behavioral responses are assumed.",
+                        style={
+                            "text-align": "left",
+                            "color": "gray",
+                            "fontSize": 12,
+                        },
+                    ),
+                    width={"size": 8, "offset": 2},
+                ),
+            ]
+        ),
         html.Br(),
-    ]
+        html.Br(),
+   ]
 )
 
 # Assign callbacks
