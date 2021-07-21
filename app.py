@@ -295,7 +295,7 @@ app.layout = html.Div(
             [
                 dbc.Col(
                     html.H1(
-                        "Explore funding mechanisms of UBI",
+                        "Basic Income Builder",
                         id="header",
                         style={
                             "text-align": "center",
@@ -354,6 +354,53 @@ app.layout = html.Div(
         html.Br(),
         html.Br(),
         html.Br(),
+        html.Br(),
+        dbc.Row(
+            [
+                dbc.Col(
+                    html.H4(
+                        [
+                            "Source: 2017-2019 Current Population Survey March Supplement. ",
+                            "This dataset is known to underestimate benefit receipt and high incomes. ",
+                            "No behavioral responses are assumed. ",
+                        ],
+                        style={
+                            "text-align": "left",
+                            "color": "gray",
+                            "fontSize": 12,
+                        },
+                    ),
+                    width={"size": 8, "offset": 2},
+                ),
+            ]
+        ),
+        dbc.Row(
+            [
+                dbc.Col(
+                    html.H4(
+                        [
+                            "Questions or feedback? ",
+                            "Email ",
+                            html.A(
+                                "contact@ubicenter.org",
+                                href="mailto:contact@ubicenter.org",
+                            ),
+                            " or file an issue at ",
+                            html.A(
+                                "github.com/UBICenter/us-calc/issues",
+                                href="http://github.com/UBICenter/us-calc/issues",
+                            ),
+                        ],
+                        style={
+                            "text-align": "left",
+                            "color": "gray",
+                            "fontSize": 12,
+                        },
+                    ),
+                    width={"size": 8, "offset": 2},
+                ),
+            ]
+        ),
         html.Br(),
         html.Br(),
     ]
@@ -584,7 +631,11 @@ def ubi(state_dropdown, level, agi_tax, benefits, taxes, include):
 
     # filter all state stats gini, poverty_gap, etc. for dropdown state
     baseline_all_state_stats = all_state_stats[
+<<<<<<< HEAD
         all_state_stats.index == state_dropdown
+=======
+        all_state_stats.index == dropdown_state
+>>>>>>> upstream/main
     ]
 
     def return_all_state(metric):
