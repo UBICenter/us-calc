@@ -22,9 +22,9 @@ person["child"] = person.age < 18
 # create mutually exclusive white non-hisp/black non-hisp/hispanic groups
 person["hispanic"] = person.hispan.between(1, 699)
 person["black"] = (person.race == 200) & (~person.hispanic)
-person["white_non_hispanic"] = (person.race == 100) & (~person.hispanic)
+person["white"] = (person.race == 100) & (~person.hispanic)
 # check to make sure persons are double counted
-assert person[["black", "hispanic", "white_non_hispanic"]].sum(axis=1).max() == 1
+assert person[["black", "hispanic", "white"]].sum(axis=1).max() == 1
 
 
 person["pwd"] = person.diffany == 2
@@ -127,12 +127,9 @@ DEMOG_COLS = [
     "adult",
     "child",
     "black",
-    "white_non_hispanic",
+    "white",
     "hispanic",
     "pwd",
-    "non_citizen",
-    "non_citizen_adult",
-    "non_citizen_child",
 ]
 
 poor_pop = person[person.poor]
@@ -148,7 +145,7 @@ pov_rate_us.name = "US"
 # calculate poverty RATE for each group by state
 pov_rates = mdf.weighted_sum(
     poor_pop, DEMOG_COLS, "asecwt", groupby="state"
-) / mdf.weighted_sum(person, DEMOG_COLS, w="asecwt", groupby="state") 
+) / mdf.weighted_sum(person, DEMOG_COLS, w="asecwt", groupby="state")
 
 # append US statistics as additional 'state'
 pov_df = pov_rates.append(pov_rate_us)

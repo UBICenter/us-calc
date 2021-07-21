@@ -11,5 +11,7 @@ dependencies:
   - us
   - pip
   - pip:
-      - jupyter-book
+      - us
+      - numerize
+      - kaleido
       - "git+https://github.com/PSLmodels/microdf"
