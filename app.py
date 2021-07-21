@@ -116,18 +116,10 @@ cards = dbc.CardDeck(
                                     "label": "0%",
                                     "style": {"color": "#F8F8FF"},
                                 },
-                                10: {
-                                    "style": {"color": "#F8F8FF"},
-                                },
-                                20: {
-                                    "style": {"color": "#F8F8FF"},
-                                },
-                                30: {
-                                    "style": {"color": "#F8F8FF"},
-                                },
-                                40: {
-                                    "style": {"color": "#F8F8FF"},
-                                },
+                                10: {"style": {"color": "#F8F8FF"},},
+                                20: {"style": {"color": "#F8F8FF"},},
+                                30: {"style": {"color": "#F8F8FF"},},
+                                40: {"style": {"color": "#F8F8FF"},},
                                 50: {
                                     "label": "50%",
                                     "style": {"color": "#F8F8FF"},
@@ -194,11 +186,7 @@ cards = dbc.CardDeck(
                                 }
                             ),
                             # specify checked items
-                            value=[
-                                "adults",
-                                "children",
-                                "non_citizens",
-                            ],
+                            value=["adults", "children", "non_citizens",],
                             labelStyle={"display": "block"},
                         ),
                     ]
@@ -214,9 +202,7 @@ cards = dbc.CardDeck(
 charts = dbc.CardDeck(
     [
         dbc.Card(
-            dcc.Graph(id="econ-graph", figure={}),
-            body=True,
-            color="info",
+            dcc.Graph(id="econ-graph", figure={}), body=True, color="info",
         ),
         dbc.Card(
             dcc.Graph(id="breakdown-graph", figure={}),
@@ -381,7 +367,9 @@ app.layout = html.Div(
 @app.callback(
     Output(component_id="ubi-output", component_property="children"),
     Output(component_id="revenue-output", component_property="children"),
-    Output(component_id="ubi-population-output", component_property="children"),
+    Output(
+        component_id="ubi-population-output", component_property="children"
+    ),
     Output(component_id="winners-output", component_property="children"),
     Output(component_id="resources-output", component_property="children"),
     Output(component_id="econ-graph", component_property="figure"),
@@ -579,7 +567,8 @@ def ubi(state_dropdown, level, agi_tax, benefits, taxes, include):
         """
         # NOTE: baseline_demog is a dataframe with global scope
         value = baseline_demog.loc[
-            (baseline_demog["demog"] == demog) & (baseline_demog["metric"] == metric),
+            (baseline_demog["demog"] == demog)
+            & (baseline_demog["metric"] == metric),
             "value",
             # NOTE: returns the first value as a float, be careful if you redefine baseline_demog
         ].values[0]
@@ -589,10 +578,14 @@ def ubi(state_dropdown, level, agi_tax, benefits, taxes, include):
     population = return_demog(demog="person", metric="pop")
     child_population = return_demog(demog="child", metric="pop")
     non_citizen_population = return_demog(demog="non_citizen", metric="pop")
-    non_citizen_child_population = return_demog(demog="non_citizen_child", metric="pop")
+    non_citizen_child_population = return_demog(
+        demog="non_citizen_child", metric="pop"
+    )
 
     # filter all state stats gini, poverty_gap, etc. for dropdown state
-    baseline_all_state_stats = all_state_stats[all_state_stats.index == state_dropdown]
+    baseline_all_state_stats = all_state_stats[
+        all_state_stats.index == state_dropdown
+    ]
 
     def return_all_state(metric):
         """filter baseline_all_state_stats and return value of select metric
@@ -633,7 +626,9 @@ def ubi(state_dropdown, level, agi_tax, benefits, taxes, include):
     poverty_gap_change = rel_change(poverty_gap, original_poverty_gap)
 
     # Calculate the change in poverty rate
-    target_persons["poor"] = target_persons.new_resources < target_persons.spmthresh
+    target_persons["poor"] = (
+        target_persons.new_resources < target_persons.spmthresh
+    )
     total_poor = (target_persons.poor * target_persons.asecwt).sum()
     poverty_rate = total_poor / population
     poverty_rate_change = rel_change(poverty_rate, original_poverty_rate)
@@ -643,7 +638,9 @@ def ubi(state_dropdown, level, agi_tax, benefits, taxes, include):
     gini_change = rel_change(gini, original_gini, 3)
 
     # Calculate percent winners
-    target_persons["winner"] = target_persons.new_resources > target_persons.spmtotres
+    target_persons["winner"] = (
+        target_persons.new_resources > target_persons.spmtotres
+    )
     total_winners = (target_persons.winner * target_persons.asecwt).sum()
     percent_winners = (total_winners / population * 100).round(1)
 
@@ -664,7 +661,9 @@ def ubi(state_dropdown, level, agi_tax, benefits, taxes, include):
     # create dictionary for demographic breakdown of poverty rates
     pov_breakdowns = {
         # return precomputed baseline poverty rates
-        "original_rates": {demog: return_demog(demog, "pov_rate") for demog in DEMOGS},
+        "original_rates": {
+            demog: return_demog(demog, "pov_rate") for demog in DEMOGS
+        },
         "new_rates": {demog: pv_rate(demog) for demog in DEMOGS},
     }
 
@@ -696,7 +695,9 @@ def ubi(state_dropdown, level, agi_tax, benefits, taxes, include):
     original_poverty_rate_string = hover_string(original_poverty_rate)
     poverty_rate_string = hover_string(poverty_rate)
 
-    original_poverty_gap_billions = "{:,}".format(int(original_poverty_gap / 1e9))
+    original_poverty_gap_billions = "{:,}".format(
+        int(original_poverty_gap / 1e9)
+    )
 
     poverty_gap_billions = "{:,}".format(int(poverty_gap / 1e9))
 
@@ -735,11 +736,14 @@ def ubi(state_dropdown, level, agi_tax, benefits, taxes, include):
         )
 
     else:
-        ubi_population_line = "UBI Population: " + numerize.numerize(ubi_population, 1)
+        ubi_population_line = "UBI Population: " + numerize.numerize(
+            ubi_population, 1
+        )
 
     winners_line = "Percent better off: " + str(percent_winners) + "%"
-    resources_line = "Average change in resources per person: $" + "{:,}".format(
-        int(change_pp)
+    resources_line = (
+        "Average change in resources per person: $"
+        + "{:,}".format(int(change_pp))
     )
 
     # ---------- populate economic breakdown bar chart ------------- #
@@ -837,7 +841,9 @@ def ubi(state_dropdown, level, agi_tax, benefits, taxes, include):
         hoverlabel=dict(bgcolor="white", font_size=14, font_family="Roboto"),
         yaxis_tickformat="%",
     )
-    breakdown_fig.update_traces(texttemplate="%{text:.1%f}", textposition="auto")
+    breakdown_fig.update_traces(
+        texttemplate="%{text:.1%f}", textposition="auto"
+    )
 
     breakdown_fig.update_xaxes(
         tickangle=0,
@@ -868,8 +874,12 @@ def ubi(state_dropdown, level, agi_tax, benefits, taxes, include):
     )
 
     # update the yaxes of the figure to account for both ends of the ranges
-    econ_fig.update_yaxes(dict(range=[global_ymin, global_ymax], autorange=False))
-    breakdown_fig.update_yaxes(dict(range=[global_ymin, global_ymax], autorange=False))
+    econ_fig.update_yaxes(
+        dict(range=[global_ymin, global_ymax], autorange=False)
+    )
+    breakdown_fig.update_yaxes(
+        dict(range=[global_ymin, global_ymax], autorange=False)
+    )
 
     return (
         ubi_line,
@@ -919,8 +929,7 @@ def update(checklist):
 
 
 @app.callback(
-    Output("benefits-checklist", "options"),
-    Input("level", "value"),
+    Output("benefits-checklist", "options"), Input("level", "value"),
 )
 def update(radio):
     # update checklist options for benefits-checklist widget if level is state
@@ -970,8 +979,7 @@ def update(radio):
 
 
 @app.callback(
-    Output("taxes-checklist", "options"),
-    Input("level", "value"),
+    Output("taxes-checklist", "options"), Input("level", "value"),
 )
 def update(radio):
     """update radio buttons for taxs if state selected"""
