@@ -5,5 +5,5 @@ dash_core_components
 plotly
 numpy
 dash_bootstrap_components
-git+git://github.com/PSLmodels/microdf.git#egg=microdf
+git+git://github.com/PSLmodels/microdf
 gunicorn
