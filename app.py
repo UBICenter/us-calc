@@ -71,6 +71,74 @@ cards = dbc.CardDeck(
             color="info",
             outline=False,
         ),
+        # exclude/include from UBI checklist
+        dbc.Card(
+            [
+                dbc.CardBody(
+                    [
+                        make_html_label("Include in UBI:"),
+                        dcc.Checklist(
+                            id="include-checklist",
+                            options=set_options(
+                                {
+                                    "non-Citizens": "non_citizens",
+                                    "Children": "children",
+                                    "Adult": "adults",
+                                }
+                            ),
+                            # specify checked items
+                            value=["adults", "children", "non_citizens",],
+                            labelStyle={"display": "block"},
+                        ),
+                    ]
+                ),
+            ],
+            color="info",
+            outline=False,
+        ),
+        
+        
+    ]
+)
+# --------------------- bottom cards --------------------- #
+bottom_cards = dbc.CardDeck(
+    [
+        # ----------------- SECTION Card 3 - Repeal Benefits ----------------- #
+        # define third card where the repeal benefits checklist is displayed
+        dbc.Card(
+            [
+                dbc.CardBody(
+                    [
+                        # label the card
+                        make_html_label("Repeal benefits:"),
+                        # use  dash component to create checklist to choose
+                        # which benefits to repeal
+                        dcc.Checklist(
+                            # this id string is a dash component_id
+                            # and is referenced as in input in app.callback
+                            id="benefits-checklist",
+                            # 'options' here refers the selections available to the user in the
+                            # checklist
+                            options=set_options(
+                                {
+                                    "  Child Tax Credit": "ctc",
+                                    "  Supplemental Security Income (SSI)": "incssi",
+                                    "  SNAP (food stamps)": "spmsnap",
+                                    "  Earned Income Tax Credit": "eitcred",
+                                    "  Unemployment benefits": "incunemp",
+                                    "  Energy subsidy (LIHEAP)": "spmheat",
+                                }
+                            ),
+                            # do not repeal benefits by default
+                            value=[],
+                            labelStyle={"display": "block"},
+                        ),
+                    ]
+                ),
+            ],
+            color="info",
+            outline=False,
+        ),
         # -------------------- SECTION Card 2 - taxes ------------------- #
         # tax slider
         #   allows user to repeal certain federal and state taxes
@@ -134,67 +202,7 @@ cards = dbc.CardDeck(
             color="info",
             outline=False,
         ),
-        # ----------------- SECTION Card 3 - Repeal Benefits ----------------- #
-        # define third card where the repeal benefits checklist is displayed
-        dbc.Card(
-            [
-                dbc.CardBody(
-                    [
-                        # label the card
-                        make_html_label("Repeal benefits:"),
-                        # use  dash component to create checklist to choose
-                        # which benefits to repeal
-                        dcc.Checklist(
-                            # this id string is a dash component_id
-                            # and is referenced as in input in app.callback
-                            id="benefits-checklist",
-                            # 'options' here refers the selections available to the user in the
-                            # checklist
-                            options=set_options(
-                                {
-                                    "  Child Tax Credit": "ctc",
-                                    "  Supplemental Security Income (SSI)": "incssi",
-                                    "  SNAP (food stamps)": "spmsnap",
-                                    "  Earned Income Tax Credit": "eitcred",
-                                    "  Unemployment benefits": "incunemp",
-                                    "  Energy subsidy (LIHEAP)": "spmheat",
-                                }
-                            ),
-                            # do not repeal benefits by default
-                            value=[],
-                            labelStyle={"display": "block"},
-                        ),
-                    ]
-                ),
-            ],
-            color="info",
-            outline=False,
-        ),
-        # exclude/include from UBI checklist
-        dbc.Card(
-            [
-                dbc.CardBody(
-                    [
-                        make_html_label("Include in UBI:"),
-                        dcc.Checklist(
-                            id="include-checklist",
-                            options=set_options(
-                                {
-                                    "non-Citizens": "non_citizens",
-                                    "Children": "children",
-                                    "Adult": "adults",
-                                }
-                            ),
-                            # specify checked items
-                            value=["adults", "children", "non_citizens",],
-                            labelStyle={"display": "block"},
-                        ),
-                    ]
-                ),
-            ],
-            color="info",
-            outline=False,
-        ),
+        
     ]
 )
 
@@ -343,6 +351,8 @@ app.layout = html.Div(
         ),
         html.Br(),
         dbc.Row([dbc.Col(cards, width={"size": 10, "offset": 1})]),
+        html.Br(),
+        dbc.Row([dbc.Col(bottom_cards, width={"size": 10, "offset": 1})]),
         html.Br(),
         dbc.Row(
             [
