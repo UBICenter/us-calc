@@ -71,6 +71,74 @@ cards = dbc.CardDeck(
             color="info",
             outline=False,
         ),
+        # exclude/include from UBI checklist
+        dbc.Card(
+            [
+                dbc.CardBody(
+                    [
+                        make_html_label("Include in UBI:"),
+                        dcc.Checklist(
+                            id="include-checklist",
+                            options=set_options(
+                                {
+                                    "non-Citizens": "non_citizens",
+                                    "Children": "children",
+                                    "Adult": "adults",
+                                }
+                            ),
+                            # specify checked items
+                            value=["adults", "children", "non_citizens",],
+                            labelStyle={"display": "block"},
+                        ),
+                    ]
+                ),
+            ],
+            color="info",
+            outline=False,
+        ),
+        
+        
+    ]
+)
+# --------------------- bottom cards --------------------- #
+bottom_cards = dbc.CardDeck(
+    [
+        # ----------------- SECTION Card 3 - Repeal Benefits ----------------- #
+        # define third card where the repeal benefits checklist is displayed
+        dbc.Card(
+            [
+                dbc.CardBody(
+                    [
+                        # label the card
+                        make_html_label("Repeal benefits:"),
+                        # use  dash component to create checklist to choose
+                        # which benefits to repeal
+                        dcc.Checklist(
+                            # this id string is a dash component_id
+                            # and is referenced as in input in app.callback
+                            id="benefits-checklist",
+                            # 'options' here refers the selections available to the user in the
+                            # checklist
+                            options=set_options(
+                                {
+                                    "  Child Tax Credit": "ctc",
+                                    "  Supplemental Security Income (SSI)": "incssi",
+                                    "  SNAP (food stamps)": "spmsnap",
+                                    "  Earned Income Tax Credit": "eitcred",
+                                    "  Unemployment benefits": "incunemp",
+                                    "  Energy subsidy (LIHEAP)": "spmheat",
+                                }
+                            ),
+                            # do not repeal benefits by default
+                            value=[],
+                            labelStyle={"display": "block"},
+                        ),
+                    ]
+                ),
+            ],
+            color="info",
+            outline=False,
+        ),
         # -------------------- SECTION Card 2 - taxes ------------------- #
         # tax slider
         #   allows user to repeal certain federal and state taxes
@@ -116,18 +184,10 @@ cards = dbc.CardDeck(
                                     "label": "0%",
                                     "style": {"color": "#F8F8FF"},
                                 },
-                                10: {
-                                    "style": {"color": "#F8F8FF"},
-                                },
-                                20: {
-                                    "style": {"color": "#F8F8FF"},
-                                },
-                                30: {
-                                    "style": {"color": "#F8F8FF"},
-                                },
-                                40: {
-                                    "style": {"color": "#F8F8FF"},
-                                },
+                                10: {"style": {"color": "#F8F8FF"},},
+                                20: {"style": {"color": "#F8F8FF"},},
+                                30: {"style": {"color": "#F8F8FF"},},
+                                40: {"style": {"color": "#F8F8FF"},},
                                 50: {
                                     "label": "50%",
                                     "style": {"color": "#F8F8FF"},
@@ -142,71 +202,7 @@ cards = dbc.CardDeck(
             color="info",
             outline=False,
         ),
-        # ----------------- SECTION Card 3 - Repeal Benefits ----------------- #
-        # define third card where the repeal benefits checklist is displayed
-        dbc.Card(
-            [
-                dbc.CardBody(
-                    [
-                        # label the card
-                        make_html_label("Repeal benefits:"),
-                        # use  dash component to create checklist to choose
-                        # which benefits to repeal
-                        dcc.Checklist(
-                            # this id string is a dash component_id
-                            # and is referenced as in input in app.callback
-                            id="benefits-checklist",
-                            # 'options' here refers the selections available to the user in the
-                            # checklist
-                            options=set_options(
-                                {
-                                    "  Child Tax Credit": "ctc",
-                                    "  Supplemental Security Income (SSI)": "incssi",
-                                    "  SNAP (food stamps)": "spmsnap",
-                                    "  Earned Income Tax Credit": "eitcred",
-                                    "  Unemployment benefits": "incunemp",
-                                    "  Energy subsidy (LIHEAP)": "spmheat",
-                                }
-                            ),
-                            # do not repeal benefits by default
-                            value=[],
-                            labelStyle={"display": "block"},
-                        ),
-                    ]
-                ),
-            ],
-            color="info",
-            outline=False,
-        ),
-        # exclude/include from UBI checklist
-        dbc.Card(
-            [
-                dbc.CardBody(
-                    [
-                        make_html_label("Include in UBI:"),
-                        dcc.Checklist(
-                            id="include-checklist",
-                            options=set_options(
-                                {
-                                    "non-Citizens": "non_citizens",
-                                    "Children": "children",
-                                    "Adult": "adults",
-                                }
-                            ),
-                            # specify checked items
-                            value=[
-                                "adults",
-                                "children",
-                                "non_citizens",
-                            ],
-                            labelStyle={"display": "block"},
-                        ),
-                    ]
-                ),
-            ],
-            color="info",
-            outline=False,
-        ),
+        
     ]
 )
 
@@ -214,9 +210,7 @@ cards = dbc.CardDeck(
 charts = dbc.CardDeck(
     [
         dbc.Card(
-            dcc.Graph(id="econ-graph", figure={}),
-            body=True,
-            color="info",
+            dcc.Graph(id="econ-graph", figure={}), body=True, color="info",
         ),
         dbc.Card(
             dcc.Graph(id="breakdown-graph", figure={}),
@@ -309,7 +303,7 @@ app.layout = html.Div(
             [
                 dbc.Col(
                     html.H1(
-                        "Explore funding mechanisms of UBI",
+                        "Basic Income Builder",
                         id="header",
                         style={
                             "text-align": "center",
@@ -329,10 +323,10 @@ app.layout = html.Div(
             [
                 dbc.Col(
                     html.H4(
-                        "Use the interactive below to explore different funding mechanisms for a UBI and their impact. You may choose between repealing benefits or adding new taxes.  When a benefit is repealed or a new tax is added, the new revenue automatically funds a UBI to all people equally to ensure each plan is budget neutral.",
+                        "Fund a universal basic income by adding taxes, replacing taxes, and/or repealing benefits",
                         style={
-                            "text-align": "left",
-                            "color": "black",
+                            "text-align": "center",
+                            "color": "#212121",
                             "fontSize": 25,
                         },
                     ),
@@ -340,8 +334,26 @@ app.layout = html.Div(
                 ),
             ]
         ),
+        # dbc.Row(dbc.Col(html.Div(dbc.Alert("This is one column", color="primary")))),
+        dbc.Row(
+            [
+                dbc.Col(
+                    html.H4(
+                        "Any surplus is shared equally across all eligible recipients",
+                        style={
+                            "text-align": "center",
+                            "color": "#212121",
+                            "fontSize": 25,
+                        },
+                    ),
+                    width={"size": 8, "offset": 2},
+                ), 
+            ]
+        ),
         html.Br(),
-        dbc.Row([dbc.Col(cards, width={"size": 10, "offset": 1})]),
+        dbc.Row([dbc.Col(cards, width={"size": 10, "offset": 1},)]),
+        html.Br(),
+        dbc.Row([dbc.Col(bottom_cards, width={"size": 10, "offset": 1},)]),
         html.Br(),
         dbc.Row(
             [
@@ -369,6 +381,53 @@ app.layout = html.Div(
         html.Br(),
         html.Br(),
         html.Br(),
+        dbc.Row(
+            [
+                dbc.Col(
+                    html.H4(
+                        [
+                            "Source: 2017-2019 Current Population Survey March Supplement. ",
+                            "This dataset is known to underestimate benefit receipt and high incomes. ",
+                            "No behavioral responses are assumed. ",
+                        ],
+                        style={
+                            "text-align": "left",
+                            "color": "gray",
+                            "fontSize": 12,
+                        },
+                    ),
+                    width={"size": 8, "offset": 2},
+                ),
+            ]
+        ),
+        dbc.Row(
+            [
+                dbc.Col(
+                    html.H4(
+                        [
+                            "Questions or feedback? ",
+                            "Email ",
+                            html.A(
+                                "contact@ubicenter.org",
+                                href="mailto:contact@ubicenter.org",
+                            ),
+                            " or file an issue at ",
+                            html.A(
+                                "github.com/UBICenter/us-calc/issues",
+                                href="http://github.com/UBICenter/us-calc/issues",
+                            ),
+                        ],
+                        style={
+                            "text-align": "left",
+                            "color": "gray",
+                            "fontSize": 12,
+                        },
+                    ),
+                    width={"size": 8, "offset": 2},
+                ),
+            ]
+        ),
+        html.Br(),
         html.Br(),
     ]
 )
@@ -381,7 +440,9 @@ app.layout = html.Div(
 @app.callback(
     Output(component_id="ubi-output", component_property="children"),
     Output(component_id="revenue-output", component_property="children"),
-    Output(component_id="ubi-population-output", component_property="children"),
+    Output(
+        component_id="ubi-population-output", component_property="children"
+    ),
     Output(component_id="winners-output", component_property="children"),
     Output(component_id="resources-output", component_property="children"),
     Output(component_id="econ-graph", component_property="figure"),
@@ -579,7 +640,8 @@ def ubi(state_dropdown, level, agi_tax, benefits, taxes, include):
         """
         # NOTE: baseline_demog is a dataframe with global scope
         value = baseline_demog.loc[
-            (baseline_demog["demog"] == demog) & (baseline_demog["metric"] == metric),
+            (baseline_demog["demog"] == demog)
+            & (baseline_demog["metric"] == metric),
             "value",
             # NOTE: returns the first value as a float, be careful if you redefine baseline_demog
         ].values[0]
@@ -589,10 +651,14 @@ def ubi(state_dropdown, level, agi_tax, benefits, taxes, include):
     population = return_demog(demog="person", metric="pop")
     child_population = return_demog(demog="child", metric="pop")
     non_citizen_population = return_demog(demog="non_citizen", metric="pop")
-    non_citizen_child_population = return_demog(demog="non_citizen_child", metric="pop")
+    non_citizen_child_population = return_demog(
+        demog="non_citizen_child", metric="pop"
+    )
 
     # filter all state stats gini, poverty_gap, etc. for dropdown state
-    baseline_all_state_stats = all_state_stats[all_state_stats.index == state_dropdown]
+    baseline_all_state_stats = all_state_stats[
+        all_state_stats.index == state_dropdown
+    ]
 
     def return_all_state(metric):
         """filter baseline_all_state_stats and return value of select metric
@@ -633,7 +699,9 @@ def ubi(state_dropdown, level, agi_tax, benefits, taxes, include):
     poverty_gap_change = rel_change(poverty_gap, original_poverty_gap)
 
     # Calculate the change in poverty rate
-    target_persons["poor"] = target_persons.new_resources < target_persons.spmthresh
+    target_persons["poor"] = (
+        target_persons.new_resources < target_persons.spmthresh
+    )
     total_poor = (target_persons.poor * target_persons.asecwt).sum()
     poverty_rate = total_poor / population
     poverty_rate_change = rel_change(poverty_rate, original_poverty_rate)
@@ -643,7 +711,9 @@ def ubi(state_dropdown, level, agi_tax, benefits, taxes, include):
     gini_change = rel_change(gini, original_gini, 3)
 
     # Calculate percent winners
-    target_persons["winner"] = target_persons.new_resources > target_persons.spmtotres
+    target_persons["winner"] = (
+        target_persons.new_resources > target_persons.spmtotres
+    )
     total_winners = (target_persons.winner * target_persons.asecwt).sum()
     percent_winners = (total_winners / population * 100).round(1)
 
@@ -664,7 +734,9 @@ def ubi(state_dropdown, level, agi_tax, benefits, taxes, include):
     # create dictionary for demographic breakdown of poverty rates
     pov_breakdowns = {
         # return precomputed baseline poverty rates
-        "original_rates": {demog: return_demog(demog, "pov_rate") for demog in DEMOGS},
+        "original_rates": {
+            demog: return_demog(demog, "pov_rate") for demog in DEMOGS
+        },
         "new_rates": {demog: pv_rate(demog) for demog in DEMOGS},
     }
 
@@ -696,7 +768,9 @@ def ubi(state_dropdown, level, agi_tax, benefits, taxes, include):
     original_poverty_rate_string = hover_string(original_poverty_rate)
     poverty_rate_string = hover_string(poverty_rate)
 
-    original_poverty_gap_billions = "{:,}".format(int(original_poverty_gap / 1e9))
+    original_poverty_gap_billions = "{:,}".format(
+        int(original_poverty_gap / 1e9)
+    )
 
     poverty_gap_billions = "{:,}".format(int(poverty_gap / 1e9))
 
@@ -721,7 +795,7 @@ def ubi(state_dropdown, level, agi_tax, benefits, taxes, include):
         # calculate population of state recieving UBI
         state_ubi_population = (state_spmu.numper_ubi * state_spmu.spmwt).sum()
 
-        ubi_population_line = "UBI Population: " + numerize.numerize(
+        ubi_population_line = "UBI population: " + numerize.numerize(
             state_ubi_population, 1
         )
 
@@ -735,11 +809,14 @@ def ubi(state_dropdown, level, agi_tax, benefits, taxes, include):
         )
 
     else:
-        ubi_population_line = "UBI Population: " + numerize.numerize(ubi_population, 1)
+        ubi_population_line = "UBI population: " + numerize.numerize(
+            ubi_population, 1
+        )
 
     winners_line = "Percent better off: " + str(percent_winners) + "%"
-    resources_line = "Average change in resources per person: $" + "{:,}".format(
-        int(change_pp)
+    resources_line = (
+        "Average change in resources per person: $"
+        + "{:,}".format(int(change_pp))
     )
 
     # ---------- populate economic breakdown bar chart ------------- #
@@ -837,7 +914,9 @@ def ubi(state_dropdown, level, agi_tax, benefits, taxes, include):
         hoverlabel=dict(bgcolor="white", font_size=14, font_family="Roboto"),
         yaxis_tickformat="%",
     )
-    breakdown_fig.update_traces(texttemplate="%{text:.1%f}", textposition="auto")
+    breakdown_fig.update_traces(
+        texttemplate="%{text:.1%f}", textposition="auto"
+    )
 
     breakdown_fig.update_xaxes(
         tickangle=0,
@@ -868,8 +947,12 @@ def ubi(state_dropdown, level, agi_tax, benefits, taxes, include):
     )
 
     # update the yaxes of the figure to account for both ends of the ranges
-    econ_fig.update_yaxes(dict(range=[global_ymin, global_ymax], autorange=False))
-    breakdown_fig.update_yaxes(dict(range=[global_ymin, global_ymax], autorange=False))
+    econ_fig.update_yaxes(
+        dict(range=[global_ymin, global_ymax], autorange=False)
+    )
+    breakdown_fig.update_yaxes(
+        dict(range=[global_ymin, global_ymax], autorange=False)
+    )
 
     return (
         ubi_line,
@@ -919,8 +1002,7 @@ def update(checklist):
 
 
 @app.callback(
-    Output("benefits-checklist", "options"),
-    Input("level", "value"),
+    Output("benefits-checklist", "options"), Input("level", "value"),
 )
 def update(radio):
     # update checklist options for benefits-checklist widget if level is state
@@ -970,8 +1052,7 @@ def update(radio):
 
 
 @app.callback(
-    Output("taxes-checklist", "options"),
-    Input("level", "value"),
+    Output("taxes-checklist", "options"), Input("level", "value"),
 )
 def update(radio):
     """update radio buttons for taxs if state selected"""
