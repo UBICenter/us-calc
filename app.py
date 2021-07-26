@@ -96,9 +96,18 @@ cards = dbc.CardDeck(
             color="info",
             outline=False,
         ),
+<<<<<<< HEAD
     ]
 )
 taxes_benefits_cards = dbc.CardDeck(
+=======
+        
+        
+    ]
+)
+# --------------------- bottom cards --------------------- #
+bottom_cards = dbc.CardDeck(
+>>>>>>> 0b7cc7aadb753aa7637ddeeaba0a674eb845310e
     [
         # ----------------- SECTION Card 3 - Repeal Benefits ----------------- #
         # define third card where the repeal benefits checklist is displayed
@@ -200,6 +209,7 @@ taxes_benefits_cards = dbc.CardDeck(
             outline=False,
         ),
         
+<<<<<<< HEAD
     ]
 )
 # --------------------- bottom cards --------------------- #
@@ -207,6 +217,8 @@ bottom_cards = dbc.CardDeck(
     [
         
         
+=======
+>>>>>>> 0b7cc7aadb753aa7637ddeeaba0a674eb845310e
     ]
 )
 
@@ -331,6 +343,24 @@ app.layout = html.Div(
                         style={
                             "text-align": "center",
                             "color": "#212121",
+<<<<<<< HEAD
+=======
+                            "fontSize": 25,
+                        },
+                    ),
+                    width={"size": 8, "offset": 2},
+                ),
+            ]
+        ),
+        dbc.Row(
+            [
+                dbc.Col(
+                    html.H4(
+                        "Any surplus is shared equally across all eligible recipients",
+                        style={
+                            "text-align": "center",
+                            "color": "#212121",
+>>>>>>> 0b7cc7aadb753aa7637ddeeaba0a674eb845310e
                             "fontSize": 25,
                         },
                     ),
@@ -365,6 +395,8 @@ app.layout = html.Div(
             # dbc.Col(cards, width={"size": 10, "offset": 1},lg=6,sm=12, xs=12),
             dbc.Col(taxes_benefits_cards, width={"size": 10, "offset": 1},sm=12, xs=12),
             ]),
+        html.Br(),
+        dbc.Row([dbc.Col(bottom_cards, width={"size": 10, "offset": 1})]),
         html.Br(),
         dbc.Row(
             [
