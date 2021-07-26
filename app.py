@@ -96,12 +96,9 @@ cards = dbc.CardDeck(
             color="info",
             outline=False,
         ),
-        
-        
     ]
 )
-# --------------------- bottom cards --------------------- #
-bottom_cards = dbc.CardDeck(
+taxes_benefits_cards = dbc.CardDeck(
     [
         # ----------------- SECTION Card 3 - Repeal Benefits ----------------- #
         # define third card where the repeal benefits checklist is displayed
@@ -202,6 +199,13 @@ bottom_cards = dbc.CardDeck(
             color="info",
             outline=False,
         ),
+        
+    ]
+)
+# --------------------- bottom cards --------------------- #
+bottom_cards = dbc.CardDeck(
+    [
+        
         
     ]
 )
@@ -334,7 +338,7 @@ app.layout = html.Div(
                 ),
             ]
         ),
-        # dbc.Row(dbc.Col(html.Div(dbc.Alert("This is one column", color="primary")))),
+        # second row of app description
         dbc.Row(
             [
                 dbc.Col(
@@ -351,9 +355,16 @@ app.layout = html.Div(
             ]
         ),
         html.Br(),
-        dbc.Row([dbc.Col(cards, width={"size": 10, "offset": 1},)]),
+        # row with one column containing input cards
+        dbc.Row([
+            dbc.Col(cards, width={"size": 10, "offset": 1},sm=12, xs=12),
+            # dbc.Col(taxes_benefits_cards, width={"size": 10, "offset": 1},lg=6,sm=12, xs=12),
+            ]),
         html.Br(),
-        dbc.Row([dbc.Col(bottom_cards, width={"size": 10, "offset": 1},)]),
+        dbc.Row([
+            # dbc.Col(cards, width={"size": 10, "offset": 1},lg=6,sm=12, xs=12),
+            dbc.Col(taxes_benefits_cards, width={"size": 10, "offset": 1},sm=12, xs=12),
+            ]),
         html.Br(),
         dbc.Row(
             [
@@ -366,15 +377,15 @@ app.layout = html.Div(
                             "fontSize": 30,
                         },
                     ),
-                    width={"size": 8, "offset": 2},
+                    width={"size": 8, "offset": 2}
                 ),
             ]
         ),
         # contains simulation results in text form
-        dbc.Row([dbc.Col(text, width={"size": 6, "offset": 3})]),
+        dbc.Row([dbc.Col(text, width={"size": 6, "offset": 3},xs=12)]),
         html.Br(),
         # contains the graphs
-        dbc.Row([dbc.Col(charts, width={"size": 10, "offset": 1})]),
+        dbc.Row([dbc.Col(charts, width={"size": 10, "offset": 1},lg=12,md=12,sm=12,xs=12)]),
         # 6 line breaks at the end of the page to make it look nicer :)
         html.Br(),
         html.Br(),
@@ -865,7 +876,7 @@ def ubi(state_dropdown, level, agi_tax, benefits, taxes, include):
     econ_fig.update_traces(texttemplate="%{text:.1%f}", textposition="auto")
 
     econ_fig.update_xaxes(
-        tickangle=0,
+        tickangle=45,
         title_text="",
         tickfont={"size": 14},
         title_standoff=25,
@@ -919,7 +930,7 @@ def ubi(state_dropdown, level, agi_tax, benefits, taxes, include):
     )
 
     breakdown_fig.update_xaxes(
-        tickangle=0,
+        tickangle=45,
         title_text="",
         tickfont={"size": 14},
         title_standoff=25,
