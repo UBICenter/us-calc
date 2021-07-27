@@ -81,7 +81,7 @@ cards = dbc.CardDeck(
                             id="include-checklist",
                             options=set_options(
                                 {
-                                    "non-Citizens": "non_citizens",
+                                    "Non-citizens": "non_citizens",
                                     "Children": "children",
                                     "Adult": "adults",
                                 }
@@ -446,9 +446,9 @@ app.layout = html.Div(
                 dbc.Col(
                     html.H4(
                         [
-                            "To see a detailed explanation of our simulation, see our paper ",
+                            "To see a detailed explanation of our simulation, see ",
                             html.A(
-                                "here.",
+                                "our paper.",
                                 href="https://www.ubicenter.org/introducing-basic-income-builder",
                             ),
                         ],
@@ -1054,19 +1054,19 @@ def update(checklist):
     """
     if "adults" not in checklist:
         return [
-            {"label": "Non-Citizens", "value": "non_citizens"},
+            {"label": "Non-citizens", "value": "non_citizens"},
             {"label": "Children", "value": "children", "disabled": True},
             {"label": "Adults", "value": "adults"},
         ]
     elif "children" not in checklist:
         return [
-            {"label": "Non-Citizens", "value": "non_citizens"},
+            {"label": "Non-citizens", "value": "non_citizens"},
             {"label": "Children", "value": "children"},
             {"label": "Adults", "value": "adults", "disabled": True},
         ]
     else:
         return [
-            {"label": "Non-Citizens", "value": "non_citizens"},
+            {"label": "Non-citizens", "value": "non_citizens"},
             {"label": "Children", "value": "children"},
             {"label": "Adults", "value": "adults"},
         ]
