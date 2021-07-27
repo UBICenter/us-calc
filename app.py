@@ -218,16 +218,6 @@ charts = dbc.CardDeck(
     ]
 )
 
-# --------------- charts as seperate cards --------------- #
-# econ_card=dbc.Card(
-#             dcc.Graph(id="econ-graph", figure={}), body=True, color="info",
-#         ),
-# breakdown_card=dbc.Card(
-#             dcc.Graph(id="breakdown-graph", figure={}),
-#             body=True,
-#             color="info",
-#         )
-
 # ------------------------------- summary card ------------------------------- #
 # create the summary card that contains ubi amount, revenue, pct. better off
 SUMMARY_OUTPUTS = [
