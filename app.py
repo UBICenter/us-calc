@@ -71,6 +71,72 @@ cards = dbc.CardDeck(
             color="info",
             outline=False,
         ),
+        # exclude/include from UBI checklist
+        dbc.Card(
+            [
+                dbc.CardBody(
+                    [
+                        make_html_label("Include in UBI:"),
+                        dcc.Checklist(
+                            id="include-checklist",
+                            options=set_options(
+                                {
+                                    "non-Citizens": "non_citizens",
+                                    "Children": "children",
+                                    "Adult": "adults",
+                                }
+                            ),
+                            # specify checked items
+                            value=["adults", "children", "non_citizens",],
+                            labelStyle={"display": "block"},
+                        ),
+                    ]
+                ),
+            ],
+            color="info",
+            outline=False,
+        ),
+        # --- toggle here to next section to  change deck size --- #
+#     ]
+# )
+# taxes_benefits_cards = dbc.CardDeck(
+#     [
+        # ----------------- SECTION Card 3 - Repeal Benefits ----------------- #
+        # define third card where the repeal benefits checklist is displayed
+        dbc.Card(
+            [
+                dbc.CardBody(
+                    [
+                        # label the card
+                        make_html_label("Repeal benefits:"),
+                        # use  dash component to create checklist to choose
+                        # which benefits to repeal
+                        dcc.Checklist(
+                            # this id string is a dash component_id
+                            # and is referenced as in input in app.callback
+                            id="benefits-checklist",
+                            # 'options' here refers the selections available to the user in the
+                            # checklist
+                            options=set_options(
+                                {
+                                    "  Child Tax Credit": "ctc",
+                                    "  Supplemental Security Income (SSI)": "incssi",
+                                    "  SNAP (food stamps)": "spmsnap",
+                                    "  Earned Income Tax Credit": "eitcred",
+                                    "  Unemployment benefits": "incunemp",
+                                    "  Energy subsidy (LIHEAP)": "spmheat",
+                                }
+                            ),
+                            # do not repeal benefits by default
+                            value=[],
+                            labelStyle={"display": "block"},
+                        ),
+                    ]
+                ),
+            ],
+            color="info",
+            outline=False,
+        ),
         # -------------------- SECTION Card 2 - taxes ------------------- #
         # tax slider
         #   allows user to repeal certain federal and state taxes
@@ -134,71 +200,11 @@ cards = dbc.CardDeck(
             color="info",
             outline=False,
         ),
-        # ----------------- SECTION Card 3 - Repeal Benefits ----------------- #
-        # define third card where the repeal benefits checklist is displayed
-        dbc.Card(
-            [
-                dbc.CardBody(
-                    [
-                        # label the card
-                        make_html_label("Repeal benefits:"),
-                        # use  dash component to create checklist to choose
-                        # which benefits to repeal
-                        dcc.Checklist(
-                            # this id string is a dash component_id
-                            # and is referenced as in input in app.callback
-                            id="benefits-checklist",
-                            # 'options' here refers the selections available to the user in the
-                            # checklist
-                            options=set_options(
-                                {
-                                    "  Child Tax Credit": "ctc",
-                                    "  Supplemental Security Income (SSI)": "incssi",
-                                    "  SNAP (food stamps)": "spmsnap",
-                                    "  Earned Income Tax Credit": "eitcred",
-                                    "  Unemployment benefits": "incunemp",
-                                    "  Energy subsidy (LIHEAP)": "spmheat",
-                                }
-                            ),
-                            # do not repeal benefits by default
-                            value=[],
-                            labelStyle={"display": "block"},
-                        ),
-                    ]
-                ),
-            ],
-            color="info",
-            outline=False,
-        ),
-        # exclude/include from UBI checklist
-        dbc.Card(
-            [
-                dbc.CardBody(
-                    [
-                        make_html_label("Include in UBI:"),
-                        dcc.Checklist(
-                            id="include-checklist",
-                            options=set_options(
-                                {
-                                    "non-Citizens": "non_citizens",
-                                    "Children": "children",
-                                    "Adult": "adults",
-                                }
-                            ),
-                            # specify checked items
-                            value=["adults", "children", "non_citizens",],
-                            labelStyle={"display": "block"},
-                        ),
-                    ]
-                ),
-            ],
-            color="info",
-            outline=False,
-        ),
+        
     ]
 )
 
-# create the 2 cards the charts will go into
+# --------------------- charts cards --------------------- #
 charts = dbc.CardDeck(
     [
         dbc.Card(
@@ -211,6 +217,7 @@ charts = dbc.CardDeck(
         ),
     ]
 )
+
 # ------------------------------- summary card ------------------------------- #
 # create the summary card that contains ubi amount, revenue, pct. better off
 SUMMARY_OUTPUTS = [
@@ -231,7 +238,7 @@ text = (
                         style={
                             "text-align": "left",
                             "color": "black",
-                            "fontSize": 25,
+                            "fontSize": 18,
                         },
                     )
                     for x in SUMMARY_OUTPUTS
@@ -257,6 +264,8 @@ app = dash.Dash(
         "https://fonts.googleapis.com/css2?family=Lato:wght@300;400&display=swap",
         "/assets/style.css",
     ],
+    # tell dash to use mobile version of something
+    meta_tags=[{'name': 'viewport', 'content': 'width=device-width, initial-scale=1'}],
     # Pass the url base pathname to Dash.
     url_base_pathname=url_base_pathname,
 )
@@ -305,7 +314,8 @@ app.layout = html.Div(
                             "font-weight": 300,
                         },
                     ),
-                    width={"size": 8, "offset": 2},
+                    width={"size": 'auto'},
+                    md={"size":8, "offset": 2},
                 ),
             ]
         ),
@@ -322,10 +332,12 @@ app.layout = html.Div(
                             "fontSize": 25,
                         },
                     ),
-                    width={"size": 8, "offset": 2},
+                    width={"size": 'auto'},
+                    md={"size":8, "offset": 2},
                 ),
             ]
         ),
+        # second row of app description
         dbc.Row(
             [
                 dbc.Col(
@@ -337,12 +349,23 @@ app.layout = html.Div(
                             "fontSize": 25,
                         },
                     ),
-                    width={"size": 8, "offset": 2},
-                ),
+                    width={"size": 'auto'},
+                    md ={"size": 8, "offset": 2}
+                ), 
             ]
         ),
         html.Br(),
-        dbc.Row([dbc.Col(cards, width={"size": 10, "offset": 1})]),
+        # row with one column containing input cards
+        dbc.Row([
+            dbc.Col(
+                cards, 
+                width={
+                    "size": "auto",
+                    # "offset": 1
+                    },
+                md={"size": 10, "offset": 1},
+                ),
+            ]),
         html.Br(),
         dbc.Row(
             [
@@ -355,21 +378,45 @@ app.layout = html.Div(
                             "fontSize": 30,
                         },
                     ),
-                    width={"size": 8, "offset": 2},
+                    width={"size": 'auto'},
+                    md={"size": 6, "offset": 3}
                 ),
             ]
         ),
         # contains simulation results in text form
-        dbc.Row([dbc.Col(text, width={"size": 6, "offset": 3})]),
+        dbc.Row(
+            [
+                dbc.Col(
+                    text, 
+                    width={
+                        "size": 'auto', 
+                    },
+                    md={"size": 6, "offset": 3}
+                )
+                ]),
         html.Br(),
-        # contains the graphs
-        dbc.Row([dbc.Col(charts, width={"size": 10, "offset": 1})]),
+        dbc.Row(
+            [
+                dbc.Col(
+                    charts,
+                    width={
+                        "size": 'auto', 
+                        # "offset": 1
+                        },
+                    lg={
+                        "size": 10, 
+                        "offset": 1
+                        },
+                ),
+            ],
+        ),
         # 6 line breaks at the end of the page to make it look nicer :)
         html.Br(),
         html.Br(),
         html.Br(),
         html.Br(),
         html.Br(),
+        # footnote explanation of data source and modeling assumptions
         dbc.Row(
             [
                 dbc.Col(
@@ -385,10 +432,41 @@ app.layout = html.Div(
                             "fontSize": 12,
                         },
                     ),
-                    width={"size": 8, "offset": 2},
+                    width={
+                        "size": 'auto', 
+                        # "offset": 2
+                        },
+                        md={"size": 8, "offset": 2}
                 ),
             ]
         ),
+        # link to paper
+        dbc.Row(
+            [
+                dbc.Col(
+                    html.H4(
+                        [
+                            "To see a detailed explanation of our simulation, see our paper ",
+                            html.A(
+                                "here.",
+                                href="https://www.ubicenter.org/introducing-basic-income-builder",
+                            ),
+                        ],
+                        style={
+                            "text-align": "left",
+                            "color": "gray",
+                            "fontSize": 12,
+                        },
+                    ),
+                    width={
+                        "size": 'auto', 
+                        # "offset": 2
+                        },
+                        md={"size": 8, "offset": 2}
+                ),
+            ]
+        ),
+        # link to contact email and github issue tracker
         dbc.Row(
             [
                 dbc.Col(
@@ -412,7 +490,11 @@ app.layout = html.Div(
                             "fontSize": 12,
                         },
                     ),
-                    width={"size": 8, "offset": 2},
+                    width={
+                        "size": 'auto', 
+                        # "offset": 2
+                        },
+                        md={"size": 8, "offset": 2}
                 ),
             ]
         ),
@@ -743,12 +825,12 @@ def ubi(state_dropdown, level, agi_tax, benefits, taxes, include):
     pov_breakdowns["strings"] = {
         demog: "Original "
         + demog
-        + " povery rate: "
+        + " poverty rate: "
         + hover_string(pov_breakdowns["original_rates"][demog])
         + "<br><extra></extra>"
         + "New "
         + demog
-        + " povery rate: "
+        + " poverty rate: "
         + hover_string(pov_breakdowns["new_rates"][demog])
         for demog in DEMOGS
     }
@@ -824,7 +906,7 @@ def ubi(state_dropdown, level, agi_tax, benefits, taxes, include):
                     "Original poverty rate: "
                     + original_poverty_rate_string
                     + "%<br><extra></extra>"
-                    "New poverty rate: " + poverty_rate_string + "%",
+                    "New poverty rate: " + poverty_rate_string,
                     # poverty gap
                     "Original poverty gap: $"
                     + original_poverty_gap_billions
@@ -854,7 +936,7 @@ def ubi(state_dropdown, level, agi_tax, benefits, taxes, include):
     econ_fig.update_traces(texttemplate="%{text:.1%f}", textposition="auto")
 
     econ_fig.update_xaxes(
-        tickangle=0,
+        tickangle=45,
         title_text="",
         tickfont={"size": 14},
         title_standoff=25,
@@ -908,7 +990,7 @@ def ubi(state_dropdown, level, agi_tax, benefits, taxes, include):
     )
 
     breakdown_fig.update_xaxes(
-        tickangle=0,
+        tickangle=45,
         title_text="",
         tickfont={"size": 14},
         title_standoff=25,
