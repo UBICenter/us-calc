@@ -905,7 +905,7 @@ def ubi(state_dropdown, level, agi_tax, benefits, taxes, include):
                     # poverty rates
                     "Original poverty rate: "
                     + original_poverty_rate_string
-                    + "%<br><extra></extra>"
+                    + "<br><extra></extra>"
                     "New poverty rate: " + poverty_rate_string,
                     # poverty gap
                     "Original poverty gap: $"
