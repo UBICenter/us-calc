@@ -9,7 +9,6 @@ from dash.dependencies import Input, Output
 import dash_bootstrap_components as dbc
 import microdf as mdf
 import os
-import us
 from numerize import numerize
 from components import make_html_label, set_options
 
