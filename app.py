@@ -414,7 +414,7 @@ app.layout = html.Div(
                         "size": "auto",
                         # "offset": 1
                     },
-                    lg={"size": 10, "offset": 1},
+                    md={"size": 10, "offset": 1},
                 ),
             ],
         ),
@@ -970,7 +970,7 @@ def ubi(state_dropdown, level, agi_tax, benefits, taxes, include):
     breakdown_fig_x_lab = [
         "Child",
         "Adult",
-        "People<br>with<br>disabilities",
+        "Has disability",
         "White",
         "Black",
         "Hispanic",
