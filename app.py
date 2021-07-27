@@ -410,32 +410,6 @@ app.layout = html.Div(
                 ),
             ],
         ),
-        # NOTE: if two cards, then use the following to get the spacing right
-        # dbc.Row(
-        #     [
-        #         dbc.Col(
-        #             econ_card,
-        #             width={
-        #                 "size": 'auto', 
-        #                 # "offset": 1
-        #                 },
-        #             sm={
-        #                 "size": 5, 
-        #                 "offset": 1
-        #                 },
-        #         ),
-        #         dbc.Col(
-        #             breakdown_card,
-        #             width={
-        #                 "size": 'auto', 
-        #                 # "offset": 1
-        #                 },
-        #             sm={
-        #                 "size": 5, 
-        #                 },
-        #         ),
-        #     ],
-        # ),
         # 6 line breaks at the end of the page to make it look nicer :)
         html.Br(),
         html.Br(),
@@ -851,12 +825,12 @@ def ubi(state_dropdown, level, agi_tax, benefits, taxes, include):
     pov_breakdowns["strings"] = {
         demog: "Original "
         + demog
-        + " povery rate: "
+        + " poverty rate: "
         + hover_string(pov_breakdowns["original_rates"][demog])
         + "<br><extra></extra>"
         + "New "
         + demog
-        + " povery rate: "
+        + " poverty rate: "
         + hover_string(pov_breakdowns["new_rates"][demog])
         for demog in DEMOGS
     }
@@ -932,7 +906,7 @@ def ubi(state_dropdown, level, agi_tax, benefits, taxes, include):
                     "Original poverty rate: "
                     + original_poverty_rate_string
                     + "%<br><extra></extra>"
-                    "New poverty rate: " + poverty_rate_string + "%",
+                    "New poverty rate: " + poverty_rate_string,
                     # poverty gap
                     "Original poverty gap: $"
                     + original_poverty_gap_billions
