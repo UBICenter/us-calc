@@ -414,7 +414,7 @@ app.layout = html.Div(
                         "size": "auto",
                         # "offset": 1
                     },
-                    lg={"size": 10, "offset": 1},
+                    md={"size": 10, "offset": 1},
                 ),
             ],
         ),
