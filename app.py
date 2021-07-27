@@ -95,10 +95,10 @@ cards = dbc.CardDeck(
             outline=False,
         ),
         # --- toggle here to next section to  change deck size --- #
-#     ]
-# )
-# taxes_benefits_cards = dbc.CardDeck(
-#     [
+        #     ]
+        # )
+        # taxes_benefits_cards = dbc.CardDeck(
+        #     [
         # ----------------- SECTION Card 3 - Repeal Benefits ----------------- #
         # define third card where the repeal benefits checklist is displayed
         dbc.Card(
@@ -198,7 +198,6 @@ cards = dbc.CardDeck(
             color="info",
             outline=False,
         ),
-        
     ]
 )
 
@@ -206,10 +205,18 @@ cards = dbc.CardDeck(
 charts = dbc.CardDeck(
     [
         dbc.Card(
-            dcc.Graph(id="econ-graph", figure={}), body=True, color="info",
+            dcc.Graph(
+                id="econ-graph", figure={}, config={"displayModeBar": False},
+            ),
+            body=True,
+            color="info",
         ),
         dbc.Card(
-            dcc.Graph(id="breakdown-graph", figure={}),
+            dcc.Graph(
+                id="breakdown-graph",
+                figure={},
+                config={"displayModeBar": False},
+            ),
             body=True,
             color="info",
         ),
@@ -259,11 +266,13 @@ app = dash.Dash(
     __name__,
     external_stylesheets=[
         dbc.themes.FLATLY,
-        "https://fonts.googleapis.com/css2?family=Lato:wght@300;400&display=swap",
+        "https://fonts.googleapis.com/css2?family=Roboto:wght@300;400&display=swap",
         "/assets/style.css",
     ],
     # tell dash to use mobile version of something
-    meta_tags=[{'name': 'viewport', 'content': 'width=device-width, initial-scale=1'}],
+    meta_tags=[
+        {"name": "viewport", "content": "width=device-width, initial-scale=1"}
+    ],
     # Pass the url base pathname to Dash.
     url_base_pathname=url_base_pathname,
 )
@@ -312,8 +321,8 @@ app.layout = html.Div(
                             "font-weight": 300,
                         },
                     ),
-                    width={"size": 'auto'},
-                    md={"size":8, "offset": 2},
+                    width={"size": "auto"},
+                    md={"size": 8, "offset": 2},
                 ),
             ]
         ),
@@ -330,8 +339,8 @@ app.layout = html.Div(
                             "fontSize": 25,
                         },
                     ),
-                    width={"size": 'auto'},
-                    md={"size":8, "offset": 2},
+                    width={"size": "auto"},
+                    md={"size": 8, "offset": 2},
                 ),
             ]
         ),
@@ -347,23 +356,25 @@ app.layout = html.Div(
                             "fontSize": 25,
                         },
                     ),
-                    width={"size": 'auto'},
-                    md ={"size": 8, "offset": 2}
-                ), 
+                    width={"size": "auto"},
+                    md={"size": 8, "offset": 2},
+                ),
             ]
         ),
         html.Br(),
         # row with one column containing input cards
-        dbc.Row([
-            dbc.Col(
-                cards, 
-                width={
-                    "size": "auto",
-                    # "offset": 1
+        dbc.Row(
+            [
+                dbc.Col(
+                    cards,
+                    width={
+                        "size": "auto",
+                        # "offset": 1
                     },
-                md={"size": 10, "offset": 1},
+                    md={"size": 10, "offset": 1},
                 ),
-            ]),
+            ]
+        ),
         html.Br(),
         dbc.Row(
             [
@@ -376,8 +387,8 @@ app.layout = html.Div(
                             "fontSize": 30,
                         },
                     ),
-                    width={"size": 'auto'},
-                    md={"size": 6, "offset": 3}
+                    width={"size": "auto"},
+                    md={"size": 6, "offset": 3},
                 ),
             ]
         ),
@@ -385,26 +396,20 @@ app.layout = html.Div(
         dbc.Row(
             [
                 dbc.Col(
-                    text, 
-                    width={
-                        "size": 'auto', 
-                    },
-                    md={"size": 6, "offset": 3}
+                    text, width={"size": "auto",}, md={"size": 6, "offset": 3}
                 )
-                ]),
+            ]
+        ),
         html.Br(),
         dbc.Row(
             [
                 dbc.Col(
                     charts,
                     width={
-                        "size": 'auto', 
+                        "size": "auto",
                         # "offset": 1
-                        },
-                    lg={
-                        "size": 10, 
-                        "offset": 1
-                        },
+                    },
+                    lg={"size": 10, "offset": 1},
                 ),
             ],
         ),
@@ -431,10 +436,10 @@ app.layout = html.Div(
                         },
                     ),
                     width={
-                        "size": 'auto', 
+                        "size": "auto",
                         # "offset": 2
-                        },
-                        md={"size": 8, "offset": 2}
+                    },
+                    md={"size": 8, "offset": 2},
                 ),
             ]
         ),
@@ -457,10 +462,10 @@ app.layout = html.Div(
                         },
                     ),
                     width={
-                        "size": 'auto', 
+                        "size": "auto",
                         # "offset": 2
-                        },
-                        md={"size": 8, "offset": 2}
+                    },
+                    md={"size": 8, "offset": 2},
                 ),
             ]
         ),
@@ -489,10 +494,10 @@ app.layout = html.Div(
                         },
                     ),
                     width={
-                        "size": 'auto', 
+                        "size": "auto",
                         # "offset": 2
-                        },
-                        md={"size": 8, "offset": 2}
+                    },
+                    md={"size": 8, "offset": 2},
                 ),
             ]
         ),
