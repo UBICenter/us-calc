@@ -244,6 +244,7 @@ text = (
                             "text-align": "left",
                             "color": "black",
                             "fontSize": 18,
+                            "font-family": "Roboto",
                         },
                     )
                     for x in SUMMARY_OUTPUTS
@@ -319,6 +320,7 @@ app.layout = html.Div(
                             "fontSize": 50,
                             "letter-spacing": "2px",
                             "font-weight": 300,
+                            "font-family": "Roboto"
                         },
                     ),
                     width={"size": "auto"},
@@ -337,6 +339,7 @@ app.layout = html.Div(
                             "text-align": "center",
                             "color": "#212121",
                             "fontSize": 25,
+                            "font-family": "Roboto"
                         },
                     ),
                     width={"size": "auto"},
@@ -354,6 +357,7 @@ app.layout = html.Div(
                             "text-align": "center",
                             "color": "#212121",
                             "fontSize": 25,
+                            "font-family": "Roboto"
                         },
                     ),
                     width={"size": "auto"},
@@ -385,6 +389,7 @@ app.layout = html.Div(
                             "text-align": "center",
                             "color": "#1976D2",
                             "fontSize": 30,
+                            "font-family": "Roboto"
                         },
                     ),
                     width={"size": "auto"},
@@ -433,6 +438,7 @@ app.layout = html.Div(
                             "text-align": "left",
                             "color": "gray",
                             "fontSize": 12,
+                            "font-family": "Roboto"
                         },
                     ),
                     width={
@@ -459,6 +465,7 @@ app.layout = html.Div(
                             "text-align": "left",
                             "color": "gray",
                             "fontSize": 12,
+                            "font-family": "Roboto"
                         },
                     ),
                     width={
@@ -491,6 +498,7 @@ app.layout = html.Div(
                             "text-align": "left",
                             "color": "gray",
                             "fontSize": 12,
+                            "font-family": "Roboto"
                         },
                     ),
                     width={
@@ -995,14 +1003,14 @@ def ubi(state_dropdown, level, agi_tax, benefits, taxes, include):
     breakdown_fig.update_xaxes(
         tickangle=45,
         title_text="",
-        tickfont={"size": 14},
+        tickfont=dict(size=14, family="Roboto"),
         title_standoff=25,
         title_font=dict(size=14, family="Roboto", color="black"),
     )
 
     breakdown_fig.update_yaxes(
         tickprefix="",
-        tickfont={"size": 14},
+        tickfont=dict(size=14, family="Roboto"),
         title_standoff=25,
         title_font=dict(size=14, family="Roboto", color="black"),
     )
