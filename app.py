@@ -320,7 +320,7 @@ app.layout = html.Div(
                             "fontSize": 50,
                             "letter-spacing": "2px",
                             "font-weight": 300,
-                            "font-family": "Roboto"
+                            "font-family": "Roboto",
                         },
                     ),
                     width={"size": "auto"},
@@ -339,7 +339,7 @@ app.layout = html.Div(
                             "text-align": "center",
                             "color": "#212121",
                             "fontSize": 25,
-                            "font-family": "Roboto"
+                            "font-family": "Roboto",
                         },
                     ),
                     width={"size": "auto"},
@@ -357,7 +357,7 @@ app.layout = html.Div(
                             "text-align": "center",
                             "color": "#212121",
                             "fontSize": 25,
-                            "font-family": "Roboto"
+                            "font-family": "Roboto",
                         },
                     ),
                     width={"size": "auto"},
@@ -389,7 +389,7 @@ app.layout = html.Div(
                             "text-align": "center",
                             "color": "#1976D2",
                             "fontSize": 30,
-                            "font-family": "Roboto"
+                            "font-family": "Roboto",
                         },
                     ),
                     width={"size": "auto"},
@@ -438,7 +438,7 @@ app.layout = html.Div(
                             "text-align": "left",
                             "color": "gray",
                             "fontSize": 12,
-                            "font-family": "Roboto"
+                            "font-family": "Roboto",
                         },
                     ),
                     width={
@@ -465,7 +465,7 @@ app.layout = html.Div(
                             "text-align": "left",
                             "color": "gray",
                             "fontSize": 12,
-                            "font-family": "Roboto"
+                            "font-family": "Roboto",
                         },
                     ),
                     width={
@@ -498,7 +498,7 @@ app.layout = html.Div(
                             "text-align": "left",
                             "color": "gray",
                             "fontSize": 12,
-                            "font-family": "Roboto"
+                            "font-family": "Roboto",
                         },
                     ),
                     width={
@@ -941,6 +941,10 @@ def ubi(state_dropdown, level, agi_tax, benefits, taxes, include):
         plot_bgcolor="white",
         title_text="Economic overview",
         title_x=0.5,
+        hoverlabel_align="right",
+        font_family="Roboto",
+        title_font_size=20,
+        paper_bgcolor="white",
         hoverlabel=dict(bgcolor="white", font_size=14, font_family="Roboto"),
         yaxis_tickformat="%",
     )
@@ -993,6 +997,10 @@ def ubi(state_dropdown, level, agi_tax, benefits, taxes, include):
         plot_bgcolor="white",
         title_text="Poverty rate breakdown",
         title_x=0.5,
+        hoverlabel_align="right",
+        font_family="Roboto",
+        title_font_size=20,
+        paper_bgcolor="white",
         hoverlabel=dict(bgcolor="white", font_size=14, font_family="Roboto"),
         yaxis_tickformat="%",
     )
