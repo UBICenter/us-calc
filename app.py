@@ -1,7 +1,6 @@
 import pandas as pd
 import numpy as np
 import plotly.graph_objects as go
-import plotly.express as px
 import dash
 import dash_core_components as dcc
 import dash_html_components as html
@@ -9,7 +8,6 @@ from dash.dependencies import Input, Output
 import dash_bootstrap_components as dbc
 import microdf as mdf
 import os
-import us
 from numerize import numerize
 from components import make_html_label, set_options
 
@@ -81,7 +79,7 @@ cards = dbc.CardDeck(
                             id="include-checklist",
                             options=set_options(
                                 {
-                                    "non-Citizens": "non_citizens",
+                                    "Non-citizens": "non_citizens",
                                     "Children": "children",
                                     "Adult": "adults",
                                 }
@@ -97,10 +95,10 @@ cards = dbc.CardDeck(
             outline=False,
         ),
         # --- toggle here to next section to  change deck size --- #
-#     ]
-# )
-# taxes_benefits_cards = dbc.CardDeck(
-#     [
+        #     ]
+        # )
+        # taxes_benefits_cards = dbc.CardDeck(
+        #     [
         # ----------------- SECTION Card 3 - Repeal Benefits ----------------- #
         # define third card where the repeal benefits checklist is displayed
         dbc.Card(
@@ -200,7 +198,6 @@ cards = dbc.CardDeck(
             color="info",
             outline=False,
         ),
-        
     ]
 )
 
@@ -208,10 +205,18 @@ cards = dbc.CardDeck(
 charts = dbc.CardDeck(
     [
         dbc.Card(
-            dcc.Graph(id="econ-graph", figure={}), body=True, color="info",
+            dcc.Graph(
+                id="econ-graph", figure={}, config={"displayModeBar": False},
+            ),
+            body=True,
+            color="info",
         ),
         dbc.Card(
-            dcc.Graph(id="breakdown-graph", figure={}),
+            dcc.Graph(
+                id="breakdown-graph",
+                figure={},
+                config={"displayModeBar": False},
+            ),
             body=True,
             color="info",
         ),
@@ -239,6 +244,7 @@ text = (
                             "text-align": "left",
                             "color": "black",
                             "fontSize": 18,
+                            "font-family": "Roboto",
                         },
                     )
                     for x in SUMMARY_OUTPUTS
@@ -261,11 +267,13 @@ app = dash.Dash(
     __name__,
     external_stylesheets=[
         dbc.themes.FLATLY,
-        "https://fonts.googleapis.com/css2?family=Lato:wght@300;400&display=swap",
+        "https://fonts.googleapis.com/css2?family=Roboto:wght@300;400&display=swap",
         "/assets/style.css",
     ],
     # tell dash to use mobile version of something
-    meta_tags=[{'name': 'viewport', 'content': 'width=device-width, initial-scale=1'}],
+    meta_tags=[
+        {"name": "viewport", "content": "width=device-width, initial-scale=1"}
+    ],
     # Pass the url base pathname to Dash.
     url_base_pathname=url_base_pathname,
 )
@@ -312,10 +320,11 @@ app.layout = html.Div(
                             "fontSize": 50,
                             "letter-spacing": "2px",
                             "font-weight": 300,
+                            "font-family": "Roboto",
                         },
                     ),
-                    width={"size": 'auto'},
-                    md={"size":8, "offset": 2},
+                    width={"size": "auto"},
+                    md={"size": 8, "offset": 2},
                 ),
             ]
         ),
@@ -330,10 +339,11 @@ app.layout = html.Div(
                             "text-align": "center",
                             "color": "#212121",
                             "fontSize": 25,
+                            "font-family": "Roboto",
                         },
                     ),
-                    width={"size": 'auto'},
-                    md={"size":8, "offset": 2},
+                    width={"size": "auto"},
+                    md={"size": 8, "offset": 2},
                 ),
             ]
         ),
@@ -347,25 +357,28 @@ app.layout = html.Div(
                             "text-align": "center",
                             "color": "#212121",
                             "fontSize": 25,
+                            "font-family": "Roboto",
                         },
                     ),
-                    width={"size": 'auto'},
-                    md ={"size": 8, "offset": 2}
-                ), 
+                    width={"size": "auto"},
+                    md={"size": 8, "offset": 2},
+                ),
             ]
         ),
         html.Br(),
         # row with one column containing input cards
-        dbc.Row([
-            dbc.Col(
-                cards, 
-                width={
-                    "size": "auto",
-                    # "offset": 1
+        dbc.Row(
+            [
+                dbc.Col(
+                    cards,
+                    width={
+                        "size": "auto",
+                        # "offset": 1
                     },
-                md={"size": 10, "offset": 1},
+                    md={"size": 10, "offset": 1},
                 ),
-            ]),
+            ]
+        ),
         html.Br(),
         dbc.Row(
             [
@@ -376,10 +389,11 @@ app.layout = html.Div(
                             "text-align": "center",
                             "color": "#1976D2",
                             "fontSize": 30,
+                            "font-family": "Roboto",
                         },
                     ),
-                    width={"size": 'auto'},
-                    md={"size": 6, "offset": 3}
+                    width={"size": "auto"},
+                    md={"size": 6, "offset": 3},
                 ),
             ]
         ),
@@ -387,26 +401,20 @@ app.layout = html.Div(
         dbc.Row(
             [
                 dbc.Col(
-                    text, 
-                    width={
-                        "size": 'auto', 
-                    },
-                    md={"size": 6, "offset": 3}
+                    text, width={"size": "auto",}, md={"size": 6, "offset": 3}
                 )
-                ]),
+            ]
+        ),
         html.Br(),
         dbc.Row(
             [
                 dbc.Col(
                     charts,
                     width={
-                        "size": 'auto', 
+                        "size": "auto",
                         # "offset": 1
-                        },
-                    lg={
-                        "size": 10, 
-                        "offset": 1
-                        },
+                    },
+                    lg={"size": 10, "offset": 1},
                 ),
             ],
         ),
@@ -430,13 +438,14 @@ app.layout = html.Div(
                             "text-align": "left",
                             "color": "gray",
                             "fontSize": 12,
+                            "font-family": "Roboto",
                         },
                     ),
                     width={
-                        "size": 'auto', 
+                        "size": "auto",
                         # "offset": 2
-                        },
-                        md={"size": 8, "offset": 2}
+                    },
+                    md={"size": 8, "offset": 2},
                 ),
             ]
         ),
@@ -446,9 +455,9 @@ app.layout = html.Div(
                 dbc.Col(
                     html.H4(
                         [
-                            "To see a detailed explanation of our simulation, see our paper ",
+                            "To see a detailed explanation of our simulation, see ",
                             html.A(
-                                "here.",
+                                "our paper.",
                                 href="https://www.ubicenter.org/introducing-basic-income-builder",
                             ),
                         ],
@@ -456,13 +465,14 @@ app.layout = html.Div(
                             "text-align": "left",
                             "color": "gray",
                             "fontSize": 12,
+                            "font-family": "Roboto",
                         },
                     ),
                     width={
-                        "size": 'auto', 
+                        "size": "auto",
                         # "offset": 2
-                        },
-                        md={"size": 8, "offset": 2}
+                    },
+                    md={"size": 8, "offset": 2},
                 ),
             ]
         ),
@@ -488,13 +498,14 @@ app.layout = html.Div(
                             "text-align": "left",
                             "color": "gray",
                             "fontSize": 12,
+                            "font-family": "Roboto",
                         },
                     ),
                     width={
-                        "size": 'auto', 
+                        "size": "auto",
                         # "offset": 2
-                        },
-                        md={"size": 8, "offset": 2}
+                    },
+                    md={"size": 8, "offset": 2},
                 ),
             ]
         ),
@@ -905,7 +916,7 @@ def ubi(state_dropdown, level, agi_tax, benefits, taxes, include):
                     # poverty rates
                     "Original poverty rate: "
                     + original_poverty_rate_string
-                    + "%<br><extra></extra>"
+                    + "<br><extra></extra>"
                     "New poverty rate: " + poverty_rate_string,
                     # poverty gap
                     "Original poverty gap: $"
@@ -930,6 +941,10 @@ def ubi(state_dropdown, level, agi_tax, benefits, taxes, include):
         plot_bgcolor="white",
         title_text="Economic overview",
         title_x=0.5,
+        hoverlabel_align="right",
+        font_family="Roboto",
+        title_font_size=20,
+        paper_bgcolor="white",
         hoverlabel=dict(bgcolor="white", font_size=14, font_family="Roboto"),
         yaxis_tickformat="%",
     )
@@ -982,6 +997,10 @@ def ubi(state_dropdown, level, agi_tax, benefits, taxes, include):
         plot_bgcolor="white",
         title_text="Poverty rate breakdown",
         title_x=0.5,
+        hoverlabel_align="right",
+        font_family="Roboto",
+        title_font_size=20,
+        paper_bgcolor="white",
         hoverlabel=dict(bgcolor="white", font_size=14, font_family="Roboto"),
         yaxis_tickformat="%",
     )
@@ -992,14 +1011,14 @@ def ubi(state_dropdown, level, agi_tax, benefits, taxes, include):
     breakdown_fig.update_xaxes(
         tickangle=45,
         title_text="",
-        tickfont={"size": 14},
+        tickfont=dict(size=14, family="Roboto"),
         title_standoff=25,
         title_font=dict(size=14, family="Roboto", color="black"),
     )
 
     breakdown_fig.update_yaxes(
         tickprefix="",
-        tickfont={"size": 14},
+        tickfont=dict(size=14, family="Roboto"),
         title_standoff=25,
         title_font=dict(size=14, family="Roboto", color="black"),
     )
@@ -1054,19 +1073,19 @@ def update(checklist):
     """
     if "adults" not in checklist:
         return [
-            {"label": "Non-Citizens", "value": "non_citizens"},
+            {"label": "Non-citizens", "value": "non_citizens"},
             {"label": "Children", "value": "children", "disabled": True},
             {"label": "Adults", "value": "adults"},
         ]
     elif "children" not in checklist:
         return [
-            {"label": "Non-Citizens", "value": "non_citizens"},
+            {"label": "Non-citizens", "value": "non_citizens"},
             {"label": "Children", "value": "children"},
             {"label": "Adults", "value": "adults", "disabled": True},
         ]
     else:
         return [
-            {"label": "Non-Citizens", "value": "non_citizens"},
+            {"label": "Non-citizens", "value": "non_citizens"},
             {"label": "Children", "value": "children"},
             {"label": "Adults", "value": "adults"},
         ]
