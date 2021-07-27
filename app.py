@@ -970,7 +970,7 @@ def ubi(state_dropdown, level, agi_tax, benefits, taxes, include):
     breakdown_fig_x_lab = [
         "Child",
         "Adult",
-        "People<br>with<br>disabilities",
+        "Has disability",
         "White",
         "Black",
         "Hispanic",
