@@ -372,7 +372,7 @@ app.layout = html.Div(
                 dbc.Col(
                     cards,
                     width={
-                        "size": "auto",
+                        "size": 12,
                         # "offset": 1
                     },
                     md={"size": 10, "offset": 1},
@@ -406,12 +406,14 @@ app.layout = html.Div(
             ]
         ),
         html.Br(),
+        # ---------------- contains charts --------------- #
         dbc.Row(
             [
                 dbc.Col(
                     charts,
                     width={
-                        "size": "auto",
+                        # "size": "auto",
+                        "size": 12,
                         # "offset": 1
                     },
                     md={"size": 10, "offset": 1},
@@ -947,6 +949,7 @@ def ubi(state_dropdown, level, agi_tax, benefits, taxes, include):
         paper_bgcolor="white",
         hoverlabel=dict(bgcolor="white", font_size=14, font_family="Roboto"),
         yaxis_tickformat="%",
+        
     )
     econ_fig.update_traces(texttemplate="%{text:.1%f}", textposition="auto")
 
@@ -1043,6 +1046,10 @@ def ubi(state_dropdown, level, agi_tax, benefits, taxes, include):
     breakdown_fig.update_yaxes(
         dict(range=[global_ymin, global_ymax], autorange=False)
     )
+
+    # adjust margins to fit mobile better
+    for fig in [econ_fig, breakdown_fig]:
+        fig.update_layout(margin=dict(l=20, r=20),)
 
     return (
         ubi_line,
