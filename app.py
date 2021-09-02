@@ -62,11 +62,12 @@ cards = dbc.CardDeck(
                             ),
                             value="federal",
                             labelStyle={"display": "block"},
+                            inputStyle={"margin-right": "5px"},
                         ),
                     ]
                 ),
             ],
-            color="info",
+            # color="info",
             outline=False,
         ),
         # exclude/include from UBI checklist
@@ -85,13 +86,13 @@ cards = dbc.CardDeck(
                                 }
                             ),
                             # specify checked items
-                            value=["adults", "children", "non_citizens",],
+                            value=["adults", "children", "non_citizens", ],
+                            inputStyle={"margin-right": "5px"},
                             labelStyle={"display": "block"},
                         ),
                     ]
                 ),
             ],
-            color="info",
             outline=False,
         ),
         # --- toggle here to next section to  change deck size --- #
@@ -128,11 +129,12 @@ cards = dbc.CardDeck(
                             # do not repeal benefits by default
                             value=[],
                             labelStyle={"display": "block"},
+                            inputStyle={"margin-right": "5px"},
+
                         ),
                     ]
                 ),
             ],
-            color="info",
             outline=False,
         ),
         # -------------------- SECTION Card 2 - taxes ------------------- #
@@ -160,6 +162,8 @@ cards = dbc.CardDeck(
                             ),
                             value=[],
                             labelStyle={"display": "block"},
+                            inputStyle={"margin-right": "5px"},
+
                         ),
                         html.Br(),
                         # defines label/other HTML attributes of agi-slider component
@@ -178,15 +182,13 @@ cards = dbc.CardDeck(
                             marks={
                                 0: {
                                     "label": "0%",
-                                    "style": {"color": "#F8F8FF"},
                                 },
-                                10: {"style": {"color": "#F8F8FF"},},
-                                20: {"style": {"color": "#F8F8FF"},},
-                                30: {"style": {"color": "#F8F8FF"},},
-                                40: {"style": {"color": "#F8F8FF"},},
+                                10: {"style": {"color": "#F8F8FF"}, },
+                                20: {"style": {"color": "#F8F8FF"}, },
+                                30: {"style": {"color": "#F8F8FF"}, },
+                                40: {"style": {"color": "#F8F8FF"}, },
                                 50: {
                                     "label": "50%",
-                                    "style": {"color": "#F8F8FF"},
                                 },
                             },
                         ),
@@ -195,7 +197,7 @@ cards = dbc.CardDeck(
                 ),
                 html.Br(),
             ],
-            color="info",
+            # color="info",
             outline=False,
         ),
     ]
@@ -208,8 +210,8 @@ charts = dbc.CardDeck(
             dcc.Graph(
                 id="econ-graph", figure={}, config={"displayModeBar": False},
             ),
-            body=True,
-            color="info",
+            # body=True,
+            # color="info",
         ),
         dbc.Card(
             dcc.Graph(
@@ -217,11 +219,13 @@ charts = dbc.CardDeck(
                 figure={},
                 config={"displayModeBar": False},
             ),
-            body=True,
-            color="info",
+            # body=True,
+            # color="info",
+            outline=True
         ),
     ]
 )
+
 
 # ------------------------------- summary card ------------------------------- #
 # create the summary card that contains ubi amount, revenue, pct. better off
@@ -401,7 +405,7 @@ app.layout = html.Div(
         dbc.Row(
             [
                 dbc.Col(
-                    text, width={"size": "auto",}, md={"size": 6, "offset": 3}
+                    text, width={"size": "auto", }, md={"size": 6, "offset": 3}
                 )
             ]
         ),
@@ -461,6 +465,7 @@ app.layout = html.Div(
                             html.A(
                                 "our paper.",
                                 href="https://www.ubicenter.org/introducing-basic-income-builder",
+                                target="blank"
                             ),
                         ],
                         style={
@@ -538,7 +543,6 @@ app.layout = html.Div(
     Input(component_id="taxes-checklist", component_property="value"),
     Input(component_id="include-checklist", component_property="value"),
 )
-
 # TODO one function to translate args to params, another to run the function, another to return the output
 def ubi(state_dropdown, level, agi_tax, benefits, taxes, include):
     """this does everything from microsimulation to figure creation.
@@ -949,7 +953,7 @@ def ubi(state_dropdown, level, agi_tax, benefits, taxes, include):
         paper_bgcolor="white",
         hoverlabel=dict(bgcolor="white", font_size=14, font_family="Roboto"),
         yaxis_tickformat="%",
-        
+
     )
     econ_fig.update_traces(texttemplate="%{text:.1%f}", textposition="auto")
 

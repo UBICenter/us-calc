@@ -8,6 +8,8 @@ import dash_html_components as html
 from dash.dependencies import Input, Output
 import dash_bootstrap_components as dbc
 
+DARK_BLUE = "#1565C0"
+
 
 def make_html_label(label_text):
     """returns formatted html.Label instance for 4 input card bodies"""
@@ -16,8 +18,10 @@ def make_html_label(label_text):
         style={
             "font-weight": "bold",
             "text-align": "center",
-            "color": "white",
+            # "color": DARK_BLUE,
+            "color": "#1976D2",
             "fontSize": 20,
+            "font-family": "Roboto",
         },
     )
 
