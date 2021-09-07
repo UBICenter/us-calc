@@ -291,9 +291,10 @@ app.layout = html.Div(
                             dbc.Col(
                                 # insert logo
                                 html.Img(
-                                    src="https://blog.ubicenter.org/_static/ubi_center_logo_wide_blue.png",
+                                    # src="https://blog.ubicenter.org/_static/ubi_center_logo_wide_blue.png",
+                                    src="https://raw.githubusercontent.com/UBICenter/ubicenter.org/master/assets/images/logos/wide-blue.jpg",
                                     height="30px",
-                                )
+                                ),
                             ),
                         ],
                         align="center",
