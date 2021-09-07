@@ -18,7 +18,6 @@ def make_html_label(label_text):
         style={
             "font-weight": "bold",
             "text-align": "center",
-            # "color": DARK_BLUE,
             "color": "#1976D2",
             "fontSize": 20,
             "font-family": "Roboto",

@@ -197,7 +197,6 @@ cards = dbc.CardDeck(
                 ),
                 html.Br(),
             ],
-            # color="info",
             outline=False,
         ),
     ]
@@ -210,8 +209,6 @@ charts = dbc.CardDeck(
             dcc.Graph(
                 id="econ-graph", figure={}, config={"displayModeBar": False},
             ),
-            # body=True,
-            # color="info",
         ),
         dbc.Card(
             dcc.Graph(
@@ -219,8 +216,6 @@ charts = dbc.CardDeck(
                 figure={},
                 config={"displayModeBar": False},
             ),
-            # body=True,
-            # color="info",
             outline=True
         ),
     ]
@@ -377,7 +372,6 @@ app.layout = html.Div(
                     cards,
                     width={
                         "size": 12,
-                        # "offset": 1
                     },
                     md={"size": 10, "offset": 1},
                 ),
@@ -416,9 +410,7 @@ app.layout = html.Div(
                 dbc.Col(
                     charts,
                     width={
-                        # "size": "auto",
                         "size": 12,
-                        # "offset": 1
                     },
                     md={"size": 10, "offset": 1},
                 ),
@@ -449,7 +441,6 @@ app.layout = html.Div(
                     ),
                     width={
                         "size": "auto",
-                        # "offset": 2
                     },
                     md={"size": 8, "offset": 2},
                 ),
@@ -477,7 +468,6 @@ app.layout = html.Div(
                     ),
                     width={
                         "size": "auto",
-                        # "offset": 2
                     },
                     md={"size": 8, "offset": 2},
                 ),
